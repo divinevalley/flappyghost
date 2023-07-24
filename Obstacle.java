@@ -1,13 +1,25 @@
+import java.util.Random;
 
-public class Obstacle {
-	private double x, y;
-    private double r;
+public class Obstacle extends Entity {
 
-    private double vx = 500, vy = 190;
+
+	/**
+	 * @param x
+	 * @param y
+	 */
+	public Obstacle(double x, double y) {
+		super(x,y);
+		Random random = new Random();
+	    // Les obstacles ont des rayons générés aléatoirement entre 10 et 45 pixels
+		r = random.nextInt(10,46);
+		vx = -500; 
+		vy = 0;
+		ax = 0; 
+		ay = 0;
+	}
+	
+
     
-    // Gravité
-    private double ax = 0, ay = 200;
     
     
-    // Les obstacles ont des rayons générés aléatoirement entre 10 et 45 pixels
 }

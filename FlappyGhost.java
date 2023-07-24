@@ -59,13 +59,12 @@ public class FlappyGhost extends Application {
 		root.getChildren().add(new Separator());
 		root.getChildren().add(barre);
 		
-		Ghost ghost = new Ghost((WIDTH-15)/2, HEIGHT/2);
+		Ghost ghost = new Ghost(WIDTH, HEIGHT/2);
 		
-		
+		Obstacle obstacle = new Obstacle(WIDTH, HEIGHT/2);
 		//key
   		scene.setOnKeyPressed((event)->{
   			if (event.getCode() == KeyCode.SPACE) {
-  				System.out.println("space");
   				ghost.sauter();
   			}
   			
@@ -75,9 +74,11 @@ public class FlappyGhost extends Application {
 
   		});
 		
+  	
 		double frameRate = 1e-9;
 		AnimationTimer timer = new AnimationTimer() {
             private long lastTime = 0;
+            private long lastTimeObstacle = 0;
             private double x = 0, y = 0;
 
             @Override
@@ -88,7 +89,8 @@ public class FlappyGhost extends Application {
                 }
 
                 double deltaTime = (now - lastTime) * frameRate;
-                x = (x + deltaTime * -200) % WIDTH;
+                double deltaTimeObstacle = (now - lastTimeObstacle) * frameRate;
+                x = (x + deltaTime * -120) % WIDTH;
 
                 // bg 
                 gc.clearRect(0, 0, WIDTH, HEIGHT);
@@ -97,16 +99,29 @@ public class FlappyGhost extends Application {
                 
                 // ghost
                 ghost.update(deltaTime);
-                gc.fillOval(ghost.getX()-ghost.getR(), ghost.getY()-ghost.getR(), ghost.getR()*2, ghost.getR()*2);
-                
+                gc.setFill(Color.BLACK);
+                gc.fillOval((ghost.getX()-ghost.getR())/2, ghost.getY()-ghost.getR(), ghost.getR()*2, ghost.getR()*2); 
 
+
+                if (deltaTimeObstacle>=3) {
+                	//obstacle
+                    System.out.println("Three seconds have passed. Action executed!");
+                    Obstacle obstacle = new Obstacle(WIDTH, HEIGHT/2);
+	                lastTimeObstacle = now;
+                }
+                
+                obstacle.update(deltaTime);
+                gc.setFill(Color.YELLOW);
+                gc.fillRect(obstacle.getX()-obstacle.getR()*2, obstacle.getY()-obstacle.getR(), obstacle.getR()*2, obstacle.getR()*2);
+                System.out.println("obstacle x = " + obstacle.getX());
+                System.out.println("obstacle r = " + obstacle.getR());
+                
+                //update time
                 lastTime = now;
             }
         };
         timer.start();
 
-        
-        
         
 		// set scene
 		stage.setScene(scene);
