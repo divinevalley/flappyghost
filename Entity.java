@@ -1,3 +1,4 @@
+import javafx.scene.canvas.GraphicsContext;
 
 public abstract class Entity {
 
@@ -29,9 +30,69 @@ public abstract class Entity {
        y += dt * vy;
 
    }
+   
+   public abstract void draw(GraphicsContext context);
     
+   public void testCollision(Entity other) {
+       if (this.intersects(other)) {
+           double vx = this.vx;
+           double vy = this.vy;
+
+           this.vx = other.vx;
+           this.vy = other.vy;
+
+           other.vx = vx;
+           other.vy = vy;
+
+           pushOut(other);
+       }
+   }
+   
+   /**
+    * Indique s'il y a intersection entre les deux balles
+    *
+    * @param other
+    * @return true s'il y a intersection
+    */
+   public boolean intersects(Entity obstacle) {
+       double dx = this.x - obstacle.x;
+       double dy = this.y - obstacle.y;
+       double d2 = dx * dx + dy * dy;
+
+       return d2 < (this.r + obstacle.r) * (this.r + obstacle.r);
+   }
     
 
+   /**
+    * Déplace les deux balles en intersection pour retrouver un déplacement
+    * minimal
+    *
+    * @param other
+    */
+   public void pushOut(Entity other) {
+       // Calculer la quantité qui overlap en X, same en Y
+       // Déplacer les deux de ces quantités/2
+       double dx = other.x - this.x;
+       double dy = other.y - this.y;
+       double d2 = dx * dx + dy * dy;
+       double d = Math.sqrt(d2);
+
+       // Overlap en pixels
+       double overlap = d - (this.r + other.r);
+
+       // Direction dans laquelle se déplacer (normalisée)
+       double directionX = dx / d;
+       double directionY = dy / d;
+
+       double deplacementX = directionX * overlap / 2;
+       double deplacementY = directionY * overlap / 2;
+
+       this.x += deplacementX;
+       this.y += deplacementY;
+       other.x -= deplacementX;
+       other.y -= deplacementY;
+   }
+   
 	public double getX() {
 		return x;
 	}

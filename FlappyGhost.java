@@ -1,8 +1,9 @@
 
+import java.util.ArrayList;
+
 import javafx.animation.AnimationTimer;
 import javafx.application.Application;
 import javafx.application.Platform;
-import javafx.event.EventHandler;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
@@ -12,7 +13,6 @@ import javafx.scene.control.CheckBox;
 import javafx.scene.control.Separator;
 import javafx.scene.image.Image;
 import javafx.scene.input.KeyCode;
-import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.Border;
 import javafx.scene.layout.BorderStroke;
 import javafx.scene.layout.BorderStrokeStyle;
@@ -25,6 +25,7 @@ import javafx.scene.text.Text;
 import javafx.stage.Stage;
 
 public class FlappyGhost extends Application {
+	private ArrayList<Obstacle> tousObstacles = new ArrayList<>();  
 	
 	public static final int WIDTH = 640, HEIGHT = 440;
 
@@ -62,6 +63,7 @@ public class FlappyGhost extends Application {
 		Ghost ghost = new Ghost(WIDTH, HEIGHT/2);
 		
 		Obstacle obstacle = new Obstacle(WIDTH, HEIGHT/2);
+		tousObstacles.add(obstacle);
 		//key
   		scene.setOnKeyPressed((event)->{
   			if (event.getCode() == KeyCode.SPACE) {
@@ -74,7 +76,8 @@ public class FlappyGhost extends Application {
 
   		});
 		
-  	
+  	//Le fantôme se déplace vers la droite à une vitesse constante initiale de 120 pixels par seconde.
+  		
 		double frameRate = 1e-9;
 		AnimationTimer timer = new AnimationTimer() {
             private long lastTime = 0;
@@ -90,7 +93,7 @@ public class FlappyGhost extends Application {
 
                 double deltaTime = (now - lastTime) * frameRate;
                 double deltaTimeObstacle = (now - lastTimeObstacle) * frameRate;
-                x = (x + deltaTime * -120) % WIDTH;
+                x = (x + deltaTime * ghost.getVitesseX()) % WIDTH;
 
                 // bg 
                 gc.clearRect(0, 0, WIDTH, HEIGHT);
@@ -99,22 +102,26 @@ public class FlappyGhost extends Application {
                 
                 // ghost
                 ghost.update(deltaTime);
-                gc.setFill(Color.BLACK);
-                gc.fillOval((ghost.getX()-ghost.getR())/2, ghost.getY()-ghost.getR(), ghost.getR()*2, ghost.getR()*2); 
+                ghost.testCollision(obstacle); // TODO obstacle => arraylist?
+                ghost.draw(gc);
+
 
 
                 if (deltaTimeObstacle>=3) {
                 	//obstacle
-                    System.out.println("Three seconds have passed. Action executed!");
+                    System.out.println("3 secondes");
                     Obstacle obstacle = new Obstacle(WIDTH, HEIGHT/2);
+                    tousObstacles.add(obstacle);
+                    
+                    obstacle.draw(gc);
 	                lastTimeObstacle = now;
                 }
                 
-                obstacle.update(deltaTime);
-                gc.setFill(Color.YELLOW);
-                gc.fillRect(obstacle.getX()-obstacle.getR()*2, obstacle.getY()-obstacle.getR(), obstacle.getR()*2, obstacle.getR()*2);
-                System.out.println("obstacle x = " + obstacle.getX());
-                System.out.println("obstacle r = " + obstacle.getR());
+                for(Obstacle obstacle : tousObstacles) {
+                    obstacle.update(deltaTime);
+                    obstacle.testCollision(ghost);
+                    obstacle.draw(gc);
+                }
                 
                 //update time
                 lastTime = now;

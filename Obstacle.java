@@ -1,5 +1,8 @@
 import java.util.Random;
 
+import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.paint.Color;
+
 public class Obstacle extends Entity {
 
 
@@ -18,8 +21,17 @@ public class Obstacle extends Entity {
 		ay = 0;
 	}
 	
+	
+	@Override
+	public void draw(GraphicsContext context) {
+		context.setFill(Color.YELLOW);
+		context.fillOval(
+	               this.x - this.r,
+	               this.y - this.r,
+	               2 * this.r,
+	               2 * this.r);
+	}
 
-    
     
     
 }
