@@ -153,6 +153,7 @@ public class FlappyGhost extends Application {
 		// set scene
 		stage.setScene(scene);
 		stage.setTitle("Flappy Ghost");
+		stage.getIcons().add(new Image(path + "/src/ghost.png"));
 		stage.setResizable(false);
 		stage.show();
 		
