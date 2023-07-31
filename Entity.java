@@ -2,7 +2,7 @@ import javafx.scene.canvas.GraphicsContext;
 
 public abstract class Entity {
 
-
+	protected boolean intersects;
     protected double x, y;
     protected double r;
     protected double vx, vy;
@@ -35,16 +35,15 @@ public abstract class Entity {
     
    public void testCollision(Entity other) {
        if (this.intersects(other)) {
-           double vx = this.vx;
-           double vy = this.vy;
+    	   intersects = true;
+    	   other.intersects = true; 
+    	   System.out.println("intersects");
+    	   System.out.println("this.x: " + this.x  + " other.x: " + other.x);
+    	   System.out.println("this.y: " + this.y  + " other.y: " + other.y);
 
-           this.vx = other.vx;
-           this.vy = other.vy;
-
-           other.vx = vx;
-           other.vy = vy;
-
-           pushOut(other);
+       } else {
+    	   this.intersects = false;
+    	   other.intersects = false;
        }
    }
    
@@ -54,44 +53,15 @@ public abstract class Entity {
     * @param other
     * @return true s'il y a intersection
     */
-   public boolean intersects(Entity obstacle) {
-       double dx = this.x - obstacle.x;
-       double dy = this.y - obstacle.y;
+   public boolean intersects(Entity other) {
+       double dx = this.x - other.x;
+       double dy = this.y - other.y;
        double d2 = dx * dx + dy * dy;
 
-       return d2 < (this.r + obstacle.r) * (this.r + obstacle.r);
+       // d^2 < r^2 
+       return d2 < (this.r + other.r) * (this.r + other.r);
    }
-    
-
-   /**
-    * Déplace les deux balles en intersection pour retrouver un déplacement
-    * minimal
-    *
-    * @param other
-    */
-   public void pushOut(Entity other) {
-       // Calculer la quantité qui overlap en X, same en Y
-       // Déplacer les deux de ces quantités/2
-       double dx = other.x - this.x;
-       double dy = other.y - this.y;
-       double d2 = dx * dx + dy * dy;
-       double d = Math.sqrt(d2);
-
-       // Overlap en pixels
-       double overlap = d - (this.r + other.r);
-
-       // Direction dans laquelle se déplacer (normalisée)
-       double directionX = dx / d;
-       double directionY = dy / d;
-
-       double deplacementX = directionX * overlap / 2;
-       double deplacementY = directionY * overlap / 2;
-
-       this.x += deplacementX;
-       this.y += deplacementY;
-       other.x -= deplacementX;
-       other.y -= deplacementY;
-   }
+   
    
 	public double getX() {
 		return x;

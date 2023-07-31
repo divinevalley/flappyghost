@@ -2,25 +2,8 @@ import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
 
 public class Ghost extends Entity {
-	private int vitesseX;  
-
-  //---------------------------------------------------------------
-    /* 
-     * Le fantôme se déplace vers la droite à une vitesse constante initiale de 120 pixels par seconde. 
-     * 
-     * La gravité (une accélération en y seulement) est initialement de 500 px/s^2
-     * vers le bas
-     * 
-     * À chaque deux obstacles rencontrés, la gravité doit augmenter de 15 vers le bas
-     *  
-     * Un saut change instantanément la vitesse en y du fantôme à 300 vers le haut
-    */
-
-    /*La vitesse en y ne doit jamais dépasser 300 vers le haut ou vers le bas. Si jamais la vitesse
-dépasse les 300, on la force à rester à une magnitude de 300 (en considérant sa direction haut/bas)*/
-    
-    //---------------------------------------------------------------
-    
+	private int vitesseX;  // NB: c'est la vitesse de l'image de fond
+	
     
     /*Un saut change instantanément la vitesse en y du fantôme à 300 vers le haut*/
     public void sauter() {
@@ -38,7 +21,8 @@ dépasse les 300, on la force à rester à une magnitude de 300 (en considérant
 		vy= 190; // 190 dans balle 
 		ax=0;
 		ay=500; // gravite, vers le bas
-		vitesseX = -120;
+		vitesseX = -120; // Le fantôme se déplace vers la droite à une vitesse constante initiale de 120 pixels par seconde. 
+		
 		/*La gravité (une accélération en y seulement) est initialement de 500 px/s^2
      * vers le bas*/
 		
@@ -46,14 +30,14 @@ dépasse les 300, on la force à rester à une magnitude de 300 (en considérant
 	
 	@Override
 	public void draw(GraphicsContext context) {
-		context.setFill(Color.BLACK);
+		Color couleur = this.intersects ? Color.RED : Color.BLACK;
+		context.setFill(couleur);
 		
 		context.fillOval(
-	               (this.x - this.r)/2, //centre
+	               (this.x - this.r),
 	               this.y - this.r,
 	               2 * this.r,
 	               2 * this.r);
-
 	}
 	
 
@@ -73,10 +57,10 @@ dépasse les 300, on la force à rester à une magnitude de 300 (en considérant
 //        }
         
         
-        if (x + r > FlappyGhost.WIDTH || x - r < 0) {
+        if (x + r > FlappyGhost.WIDTH || x - r < 0) { // TODO remove (va jamais toucher murs cotes) 
             vx *= -0.5; // apres mur, vitesse diminue 
         }
-        if (y + r > FlappyGhost.HEIGHT || y - r < 0) {
+        if (y + r > FlappyGhost.HEIGHT || y - r < 0) { // si touche plafond/sol
             vy *= -0.5;
             vy = plafonnerVy(vy);
         }

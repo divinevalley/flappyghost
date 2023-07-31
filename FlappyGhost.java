@@ -1,5 +1,6 @@
 
 import java.util.ArrayList;
+import java.util.Random;
 
 import javafx.animation.AnimationTimer;
 import javafx.application.Application;
@@ -25,7 +26,11 @@ import javafx.scene.text.Text;
 import javafx.stage.Stage;
 
 public class FlappyGhost extends Application {
-	private ArrayList<Obstacle> tousObstacles = new ArrayList<>();  
+	private ArrayList<Obstacle> tousObstacles = new ArrayList<>();
+	private ArrayList<Obstacle> obstaclesPasses = new ArrayList<>();
+	private int nbObstaclesRencontres = 0;
+	private boolean debug = false;
+	private boolean pause = false;
 	
 	public static final int WIDTH = 640, HEIGHT = 440;
 
@@ -60,10 +65,9 @@ public class FlappyGhost extends Application {
 		root.getChildren().add(new Separator());
 		root.getChildren().add(barre);
 		
-		Ghost ghost = new Ghost(WIDTH, HEIGHT/2);
+		Ghost ghost = new Ghost(WIDTH/2, HEIGHT/2); // position au centre
 		
-		Obstacle obstacle = new Obstacle(WIDTH, HEIGHT/2);
-		tousObstacles.add(obstacle);
+		
 		//key
   		scene.setOnKeyPressed((event)->{
   			if (event.getCode() == KeyCode.SPACE) {
@@ -76,7 +80,6 @@ public class FlappyGhost extends Application {
 
   		});
 		
-  	//Le fantôme se déplace vers la droite à une vitesse constante initiale de 120 pixels par seconde.
   		
 		double frameRate = 1e-9;
 		AnimationTimer timer = new AnimationTimer() {
@@ -94,7 +97,8 @@ public class FlappyGhost extends Application {
                 double deltaTime = (now - lastTime) * frameRate;
                 double deltaTimeObstacle = (now - lastTimeObstacle) * frameRate;
                 x = (x + deltaTime * ghost.getVitesseX()) % WIDTH;
-
+              	//Le fantôme se déplace vers la droite à une vitesse constante initiale de 120 pixels par seconde.
+                
                 // bg 
                 gc.clearRect(0, 0, WIDTH, HEIGHT);
                 gc.drawImage(img, x, y);
@@ -102,26 +106,42 @@ public class FlappyGhost extends Application {
                 
                 // ghost
                 ghost.update(deltaTime);
-                ghost.testCollision(obstacle); // TODO obstacle => arraylist?
                 ghost.draw(gc);
 
-
-
+                // toutes les 3 secondes
                 if (deltaTimeObstacle>=3) {
-                	//obstacle
-                    System.out.println("3 secondes");
-                    Obstacle obstacle = new Obstacle(WIDTH, HEIGHT/2);
+                	//creer nouvel obstacle
+                	nbObstaclesRencontres++; //compter nb obstacles
+                    Random random = new Random();
+            		int yObst = random.nextInt(0,FlappyGhost.HEIGHT);
+                    Obstacle obstacle = new Obstacle(WIDTH, yObst);
                     tousObstacles.add(obstacle);
-                    
-                    obstacle.draw(gc);
 	                lastTimeObstacle = now;
+	                
+	                System.out.println("ghost x= " + ghost.getX() + ", y = " + ghost.getY());
+	                System.out.println("obst x= " + obstacle.getX() + ", y = " + obstacle.getY());
+	                
+	                // À chaque deux obstacles rencontrés, la gravité doit augmenter de 15 vers le bas
+	                if (nbObstaclesRencontres % 2 == 0) {
+	                	ghost.setAy(ghost.getAy()+15);
+	                	System.out.println("ay: " + ghost.getAy());
+	                }
+	                
+	                
                 }
                 
                 for(Obstacle obstacle : tousObstacles) {
+                	if (obstacle.getX() + obstacle.getR() < 0) { // si obstacle depasse mur gauche, supprimer, liberer memoire
+                		obstaclesPasses.add(obstacle);	
+                	}
                     obstacle.update(deltaTime);
                     obstacle.testCollision(ghost);
                     obstacle.draw(gc);
                 }
+                //remove all 
+                tousObstacles.removeAll(obstaclesPasses);
+                
+               
                 
                 //update time
                 lastTime = now;
@@ -147,7 +167,8 @@ public class FlappyGhost extends Application {
 		
 		//button & checkbox actions
 		button.setOnAction((e) -> {
-			System.out.println("button");
+			pause = !pause;
+			System.out.println("pause: " + pause);
 		});
 		
 		checkbox.setOnAction((e)->{
