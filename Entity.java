@@ -2,17 +2,22 @@ import javafx.scene.canvas.GraphicsContext;
 
 public abstract class Entity {
 
-	protected boolean intersects;
+	protected boolean intersects; // pour indiquer si en collision ou pas, ce qui va impacter sa couleur
     protected double x, y;
     protected double r;
-    protected double vx, vy;
+    protected double vx;
     
-    // Gravité
-    protected double ax, ay;
+
     
     public Entity(double x, double y) {
     	this.x = x;
     	this.y = y;
+    }
+    
+    public Entity(double x, double y, double vx) {
+    	this.x = x;
+    	this.y = y;
+    	this.vx = vx;
     }
     
 	
@@ -21,15 +26,7 @@ public abstract class Entity {
     *
     * @param dt Temps écoulé depuis le dernier update() en secondes
     */
-   public void update(double dt) {
-
-       vx += dt * ax;
-       vy += dt * ay;
-       
-       x += dt * vx;
-       y += dt * vy;
-
-   }
+   public abstract void update(double dt);
    
    public abstract void draw(GraphicsContext context);
     
@@ -88,31 +85,5 @@ public abstract class Entity {
 		this.vx = vx;
 	}
 
-	public double getVy() {
-		return vy;
-	}
-
-	public void setVy(double vy) {
-		this.vy = vy;
-	}
-
-	public double getAx() {
-		return ax;
-	}
-
-	public void setAx(double ax) {
-		this.ax = ax;
-	}
-
-	public double getAy() {
-		return ay;
-	}
-
-	public void setAy(double ay) {
-		this.ay = ay;
-	}
-
-
-    
 	
 }

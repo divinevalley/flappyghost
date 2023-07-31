@@ -3,8 +3,10 @@ import javafx.scene.paint.Color;
 
 public class Ghost extends Entity {
 	private int vitesseX;  
-	// NB: c'est la vitesse de l'image de fond. vx du ghost represente la vitesse du vrai x sur l'ecran (0 car ne bouge pas sur le plan droite/gauche)
+	// NB: c'est la vitesse de l'image de fond. vx du ghost represente la vitesse du vrai x sur l'ecran (vx=0 car ne bouge pas sur le plan droite/gauche)
 	
+	private double vy;
+    private double ay;// Gravité
     
     /*Un saut change instantanément la vitesse en y du fantôme à 300 vers le haut*/
     public void sauter() {
@@ -18,9 +20,8 @@ public class Ghost extends Entity {
 	public Ghost(double x, double y) {
 		super(x,y);
 		r = 30;
-		vx = 0; // 500 dans balle
+		vx = 0; //vx=0 car ne bouge pas sur le plan droite/gauche
 		vy= 190; // 190 dans balle 
-		ax=0;
 		ay=500; // gravite, vers le bas
 		vitesseX = -120; // Le fantôme se déplace vers la droite à une vitesse constante initiale de 120 pixels par seconde. 
 		
@@ -49,15 +50,10 @@ public class Ghost extends Entity {
      */
     public void update(double dt) {
 
-        super.update(dt);
-        
-//        if (y + r > FlappyGhost.HEIGHT || y - r < 0) { // si depasse haut, rebondir
-//            vy *= -0.5;
-//        } else if (y + r > FlappyGhost.HEIGHT*2/3 ) { // si descend trop bas
-//        	vy *= -0.1;
-//        }
-        
-        
+	       vy += dt * ay;
+	       x += dt * vx;
+	       y += dt * vy;
+      
         if (x + r > FlappyGhost.WIDTH || x - r < 0) { // TODO remove (va jamais toucher murs cotes) 
             vx *= -0.5; // apres mur, vitesse diminue 
         }
@@ -113,8 +109,22 @@ public class Ghost extends Entity {
 		this.vitesseX = vitesseX;
 	}
     
+	public double getAy() {
+		return ay;
+	}
+
+	public void setAy(double ay) {
+		this.ay = ay;
+	}
     
     
-    
-	
+	public double getVy() {
+		return vy;
+	}
+
+	public void setVy(double vy) {
+		this.vy = vy;
+	}
+
+
 }
