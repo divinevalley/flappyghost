@@ -13,7 +13,6 @@ public class Controleur {
 	private boolean debug = false;
 
 	
-	
 	/** constructeur
 	 * @param modele
 	 * @param vue
@@ -26,7 +25,7 @@ public class Controleur {
 	}
 	
 	public void nouvelObstacle(Ghost ghost) {
-		modele.creerNouvelObstacle(ghost); // demande a modele de creer obstacle
+		modele.creerNouvelObstacle(ghost); // demande a Modele de creer obstacle
 	}
 	
 	// Chaque fois que le joueur dépasse un obst, son score augmente de 5 points.
@@ -38,9 +37,13 @@ public class Controleur {
 	}
 	
 	public void supprimerObstaclesPasses(Ghost ghost, double deltaTime) {
-		modele.supprimerObstaclesPasses(ghost, deltaTime, vue.gc); // demande à modèle de supprimer anciens obstacles
+		modele.supprimerObstaclesPasses(ghost, deltaTime, vue.gc, debug); // demande à modèle de supprimer anciens obstacles
 	}
 	
+	public void drawUpdateGhost(Ghost ghost, double deltaTime) {
+		ghost.update(deltaTime);
+		ghost.draw(vue.gc, debug);
+	}
 
 	
 	/**
@@ -63,8 +66,10 @@ public class Controleur {
 	public void gererCheckbox() {
 		if(vue.checkbox.isSelected()) {
 			System.out.println("checked");
+			debug = true;
 		} else {
 			System.out.println("not checked");
+			debug = false;
 		}
 	}
 	
@@ -81,6 +86,15 @@ public class Controleur {
 	public void setPause(boolean pause) {
 		this.pause = pause;
 	}
+
+	public boolean isDebug() {
+		return debug;
+	}
+
+	public void setDebug(boolean debug) {
+		this.debug = debug;
+	}
+	
 	
 	
 }

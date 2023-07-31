@@ -1,6 +1,7 @@
 import java.util.Random;
 
 import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.image.Image;
 import javafx.scene.paint.Color;
 
 public class Obstacle extends Entity {
@@ -8,6 +9,8 @@ public class Obstacle extends Entity {
 	private double initialY; // important pour obstacles sinus
 	private double timeSinceTeleport=0; 
 	private boolean depasse = false; // indique si cet obstacle a déjà été "dépassé" par le joueur
+	private Image img;
+
 	
 	/** constructeur
 	 * @param x
@@ -19,6 +22,11 @@ public class Obstacle extends Entity {
 		// rayons générés aléatoirement entre 10 et 45 pixels
 		r = random.nextInt(10,46);
 		type = random.nextInt(1,4); // type aleatoire 1,2, ou 3
+		
+		// img
+		int imgAleatoire = random.nextInt(0,27); 
+		img = new Image(System.getProperty("user.dir") + "/src/obstacles/" + imgAleatoire + ".png");
+		
 	}
 
 	
@@ -73,14 +81,19 @@ public class Obstacle extends Entity {
 	}
 
 	@Override
-	public void draw(GraphicsContext context) {
-		Color couleur = this.intersects ? Color.RED : Color.YELLOW; // couleur en fonction de son statut intersects
-		context.setFill(couleur);
-		context.fillOval(
-				this.x - this.r,
-				this.y - this.r,
-				2 * this.r,
-				2 * this.r);
+	public void draw(GraphicsContext context, boolean debug) {
+		if (debug) {
+			Color couleur = this.intersects ? Color.RED : Color.YELLOW; // couleur en fonction de son statut intersects
+			context.setFill(couleur);
+			context.fillOval(
+					this.x - this.r,
+					this.y - this.r,
+					2 * this.r,
+					2 * this.r);
+			
+		} else {
+			context.drawImage(img, x-r, y-r, r*2, r*2);
+		}
 	}
 
 

@@ -100,8 +100,7 @@ public class FlappyGhost extends Application {
 					gc.drawImage(img, positionXImageBg+WIDTH, 0);
 
 					// ghost
-					ghost.update(deltaTime);
-					ghost.draw(gc);
+					controleur.drawUpdateGhost(ghost, deltaTime);
 
 					// toutes les 3 secondes, nouvel obstacle
 					if (deltaTimeObstacle>=3) {
@@ -159,9 +158,9 @@ public class FlappyGhost extends Application {
 
 	}
 	
-	public void drawObstacle(Obstacle obstacle) {
-		obstacle.draw(gc);
-	}
+//	public void drawObstacle(Obstacle obstacle) {
+//		obstacle.draw(gc, controleur.isDebug());
+//	}
 
 
 }

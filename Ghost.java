@@ -1,18 +1,22 @@
 import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.image.Image;
 import javafx.scene.paint.Color;
 
 public class Ghost extends Entity {
 	private int vitesseX;  
-	// NB: c'est la vitesse de l'image de fond. vx du ghost represente la vitesse du vrai x sur l'ecran (vx=0 car ne bouge pas sur le plan droite/gauche)
-	
+	// NB: c'est la vitesse de l'image de fond. alors que vx represente la vitesse du vrai x sur l'ecran 
+	// (vx=0 car ne bouge pas sur le plan droite/gauche)
+
 	private double vy;
-    private double ay;// Gravité
-    
-    /*Un saut change instantanément la vitesse en y du fantôme à 300 vers le haut*/
-    public void sauter() {
-    	vy = -300;
-    }
-    
+	private double ay; // Gravité
+	
+	private Image img = new Image(System.getProperty("user.dir") + "/src/ghost.png");
+
+	/*Un saut change instantanément la vitesse en y du fantôme à 300 vers le haut*/
+	public void sauter() {
+		vy = -300;
+	}
+
 	/** constructeur
 	 * @param x
 	 * @param y
@@ -20,86 +24,87 @@ public class Ghost extends Entity {
 	public Ghost(double x, double y) {
 		super(x,y);
 		r = 30;
-		vx = 0; //vx=0 car ne bouge pas sur le plan droite/gauche
+		vx = 0; //vx=0 car ne bouge pas sur le plan droite/gauche (sur l'ecran)
 		vy= 190; // 190 dans balle 
 		ay=500; // gravite, vers le bas
-		vitesseX = -120; // Le fantôme se déplace vers la droite à une vitesse constante initiale de 120 pixels par seconde. 
-		
+		vitesseX = -120; // c'est l'image de fond qui se déplace : 
+		// énoncé : Le fantôme se déplace vers la droite à une vitesse constante initiale de 120 pixels par seconde. 
+
 		/*La gravité (une accélération en y seulement) est initialement de 500 px/s^2
-     * vers le bas*/
-		
+		 * vers le bas*/
 	}
-	
+
 	@Override
-	public void draw(GraphicsContext context) {
+	public void draw(GraphicsContext context, boolean debug) {
+		if (debug) {
 		Color couleur = this.intersects ? Color.RED : Color.BLACK;
 		context.setFill(couleur);
-		
 		context.fillOval(
-	               (this.x - this.r),
-	               this.y - this.r,
-	               2 * this.r,
-	               2 * this.r);
+				(x - r),
+				y - r,
+				2 * r,
+				2 * r);
+		} else {
+			context.drawImage(img, x-r, y-r, 2*r, 2*r); // (img, position x, position y, w, h)
+		}
+
 	}
-	
 
-    /**
-     * Met à jour la position et la vitesse du ghost
-     *
-     * @param dt Temps écoulé depuis le dernier update() en secondes
-     */
-    public void update(double dt) {
 
-	       vy += dt * ay;
-	       x += dt * vx;
-	       y += dt * vy;
-      
-        if (x + r > FlappyGhost.WIDTH || x - r < 0) { // TODO remove (va jamais toucher murs cotes) 
-            vx *= -0.5; // apres mur, vitesse diminue 
-        }
-        if (y + r > FlappyGhost.HEIGHT || y - r < 0) { // si touche plafond/sol
-            vy *= -0.5;
-            vy = plafonnerVy(vy);
-        }
+	/**
+	 * Met à jour la position et la vitesse du ghost
+	 *
+	 * @param dt Temps écoulé depuis le dernier update() en secondes
+	 */
+	public void update(double dt) {
 
-        x = Math.min(x, FlappyGhost.WIDTH - r); // corriger glitch travserse mur
-        x = Math.max(x, r);
+		vy += dt * ay;
+		x += dt * vx;
+		y += dt * vy;
 
-        y = Math.min(y, FlappyGhost.HEIGHT - r);
-        y = Math.max(y, r);
+		if (x + r > FlappyGhost.WIDTH || x - r < 0) { // TODO remove (va jamais toucher murs cotes) 
+			vx *= -0.5; // apres mur, vitesse diminue 
+		}
+		if (y + r > FlappyGhost.HEIGHT || y - r < 0) { // si touche plafond/sol
+			vy *= -0.5;
+			vy = plafonnerVy(vy);
+		}
 
-    }
-    
-    /*La vitesse en y ne doit jamais dépasser 300 vers le haut ou vers le bas. Si jamais la vitesse
+		x = Math.min(x, FlappyGhost.WIDTH - r); // corriger glitch travserse mur
+		x = Math.max(x, r);
+
+		y = Math.min(y, FlappyGhost.HEIGHT - r);
+		y = Math.max(y, r);
+
+	}
+
+	/*La vitesse en y ne doit jamais dépasser 300 vers le haut ou vers le bas. Si jamais la vitesse
     dépasse les 300, on la force à rester à une magnitude de 300 (en considérant sa direction haut/bas)*/
-    /**
-     * @param vy
-     * @return
-     */
-    public static double plafonnerVy(double vy) {
-    	if (vy>300) {
-    		return 300;
-    	} else if (vy<-300) {
-    		return -300;
-    	} else {
-    		return vy;
-    	}
-    }
-    
-    /*Chaque fois que le joueur dépasse horizontalement un obstacle (autrement dit, lorsque son extrémité
-     * gauche dépasse l’extrémité droite de l’obstacle), son score augmente de 5 points.*/
-    /**
-     * @param obstacle
-     * @return true si le joueur depasse l'obstacle
-     */
-    public boolean depasse(Obstacle obstacle) {
-    	double extremiteGaucheGhost = this.x - this.r;
-//    	System.out.println("extremiteGaucheGhost:"+extremiteGaucheGhost);
-    	double extremiteDroiteObst = obstacle.x + obstacle.r;
-//    	System.out.println("extremiteDroiteObst:"+extremiteDroiteObst);
-//    	System.out.println((extremiteDroiteObst<extremiteGaucheGhost));
-    	return (extremiteDroiteObst<extremiteGaucheGhost);
-    }
+	/**
+	 * @param vy
+	 * @return vy ajusté
+	 */
+	public static double plafonnerVy(double vy) {
+		if (vy>300) {
+			return 300;
+		} else if (vy<-300) {
+			return -300;
+		} else {
+			return vy;
+		}
+	}
+
+	/* Chaque fois que le joueur dépasse horizontalement un obstacle (autrement dit, lorsque son extrémité
+	 * gauche dépasse l’extrémité droite de l’obstacle), son score augmente de 5 points.*/
+	/**
+	 * @param obstacle
+	 * @return true si le joueur depasse l'obstacle
+	 */
+	public boolean depasse(Obstacle obstacle) {
+		double extremiteGaucheGhost = this.x - this.r;
+		double extremiteDroiteObst = obstacle.x + obstacle.r;
+		return (extremiteDroiteObst<extremiteGaucheGhost);
+	}
 
 	public int getVitesseX() {
 		return vitesseX;
@@ -108,7 +113,7 @@ public class Ghost extends Entity {
 	public void setVitesseX(int vitesseX) {
 		this.vitesseX = vitesseX;
 	}
-    
+
 	public double getAy() {
 		return ay;
 	}
@@ -116,8 +121,7 @@ public class Ghost extends Entity {
 	public void setAy(double ay) {
 		this.ay = ay;
 	}
-    
-    
+
 	public double getVy() {
 		return vy;
 	}

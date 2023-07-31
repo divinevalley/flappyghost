@@ -3,59 +3,67 @@ import javafx.scene.canvas.GraphicsContext;
 public abstract class Entity {
 
 	protected boolean intersects; // pour indiquer si en collision ou pas, ce qui va impacter sa couleur
-    protected double x, y;
-    protected double r;
-    protected double vx;
-    
+	protected double x, y;
+	protected double r;
+	protected double vx;
 
-    public Entity(double x, double y) {
-    	this.x = x;
-    	this.y = y;
-    }
-    
-    public Entity(double x, double y, double vx) {
-    	this.x = x;
-    	this.y = y;
-    	this.vx = vx;
-    }
-    
-	
-	 /**
-    * Met à jour la position et la vitesse de l'objet
-    *
-    * @param dt Temps écoulé depuis le dernier update() en secondes
-    */
-   public abstract void update(double dt);
-   
-   public abstract void draw(GraphicsContext context);
-    
-   public void testCollision(Entity other) {
-       if (this.intersects(other)) {
-    	   intersects = true;
-    	   other.intersects = true; 
 
-       } else {
-    	   this.intersects = false;
-    	   other.intersects = false;
-       }
-   }
-   
-   /**
-    * Indique s'il y a intersection entre les deux balles
-    *
-    * @param other
-    * @return true s'il y a intersection
-    */
-   public boolean intersects(Entity other) {
-       double dx = this.x - other.x;
-       double dy = this.y - other.y;
-       double d2 = dx * dx + dy * dy;
+	public Entity(double x, double y) {
+		this.x = x;
+		this.y = y;
+	}
 
-       // d^2 < r^2 
-       return d2 < (this.r + other.r) * (this.r + other.r);
-   }
-   
-   
+	public Entity(double x, double y, double vx) {
+		this.x = x;
+		this.y = y;
+		this.vx = vx;
+	}
+
+
+	/**
+	 * Met à jour la position et la vitesse de l'objet
+	 *
+	 * @param dt Temps écoulé depuis le dernier update() en secondes
+	 */
+	public abstract void update(double dt);
+
+	/**
+	 * illustrer l'objet en question en fonction du statut debug (en tant que balle ou image)
+	 * @param context
+	 */
+	public abstract void draw(GraphicsContext context, boolean debug);
+
+	/**
+	 * met à jour le statut "intersects" (attribut) de chaque Entity si ils sont en intersection
+	 * (permet de savoir quelle couleur mettre) 
+	 * @param other
+	 */
+	public void testCollision(Entity other) {
+		if (this.intersects(other)) {
+			intersects = true;
+			other.intersects = true; 
+		} else {
+			this.intersects = false;
+			other.intersects = false;
+		}
+	}
+
+	/**
+	 * Indique s'il y a intersection entre les deux balles
+	 *
+	 * @param other
+	 * @return true s'il y a intersection
+	 */
+	public boolean intersects(Entity other) {
+		double dx = this.x - other.x;
+		double dy = this.y - other.y;
+		double d2 = dx * dx + dy * dy;
+
+		// d^2 < r^2 
+		return d2 < (this.r + other.r) * (this.r + other.r);
+	}
+
+
 	public double getX() {
 		return x;
 	}
@@ -84,5 +92,5 @@ public abstract class Entity {
 		this.vx = vx;
 	}
 
-	
+
 }

@@ -58,7 +58,7 @@ public class Modele {
 	 * @param deltaTime
 	 * @param gc
 	 */
-	public void supprimerObstaclesPasses(Ghost ghost, double deltaTime, GraphicsContext gc) {
+	public void supprimerObstaclesPasses(Ghost ghost, double deltaTime, GraphicsContext gc, boolean debug) {
 
 		for(Obstacle obstacle : tousObstacles) {
 			// si obstacle depasse mur gauche, supprimer, liberer memoire
@@ -68,7 +68,7 @@ public class Modele {
 			obstacle.setVx(ghost.getVitesseX()); // màj vitesse "apparente" des obstacles selon la vitesse du ghost 
 			obstacle.update(deltaTime); // update position
 			obstacle.testCollision(ghost);
-			obstacle.draw(gc);
+			obstacle.draw(gc, debug);
 		}
 		//ensuite les supprimer
 		tousObstacles.removeAll(obstaclesASupprimer);
