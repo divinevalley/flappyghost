@@ -74,7 +74,7 @@ public class Obstacle extends Entity {
 
 	@Override
 	public void draw(GraphicsContext context) {
-		Color couleur = this.intersects ? Color.RED : Color.YELLOW;
+		Color couleur = this.intersects ? Color.RED : Color.YELLOW; // couleur en fonction de son statut intersects
 		context.setFill(couleur);
 		context.fillOval(
 				this.x - this.r,

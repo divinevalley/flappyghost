@@ -1,0 +1,88 @@
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Random;
+
+import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.text.Text;
+
+// fait calculs, c'est tout
+public class Modele {
+	// attributs 
+	private ArrayList<Obstacle> tousObstacles = new ArrayList<>();
+	private ArrayList<Obstacle> obstaclesASupprimer = new ArrayList<>();
+	private HashSet<Obstacle> obstaclesDepasses = new HashSet<>(); // Set pour éviter doublons
+	private int nbObstaclesRencontres = 0;
+	private int score = 0;
+	
+	
+	// méthodes
+	
+	/**
+	 * @param ghost
+	 */
+	public void creerNouvelObstacle(Ghost ghost) {
+
+		//creer nouvel obstacle
+		nbObstaclesRencontres++; //compter nb obstacles
+		Random random = new Random();
+		int positionYObstacle = random.nextInt(0, 400);
+		Obstacle obstacle = new Obstacle(FlappyGhost.WIDTH, positionYObstacle, ghost.getVitesseX());
+		tousObstacles.add(obstacle);
+		
+		// À chaque deux obstacles rencontrés, la gravité doit augmenter de 15 vers le bas
+		// À chaque deux obstacles dépassés, la vitesse horizontale du joueur augmente de 15 pixels par seconde.
+		if (nbObstaclesRencontres % 2 == 0) {
+			ghost.setAy(ghost.getAy()+15);
+			ghost.setVitesseX(ghost.getVitesseX()-15);
+		}
+	}
+	
+	// Chaque fois que le joueur dépasse un obst, son score augmente de 5 points.
+	// calcul, retourner int
+	public int calculerScore(Ghost ghost, Text scoreText) {
+		for(Obstacle obstacle : tousObstacles) {
+			if (ghost.depasse(obstacle)) {
+				obstaclesDepasses.add(obstacle); 
+				score = obstaclesDepasses.size() * 5;
+				scoreText.setText("Score: " + score);
+//				System.out.println("score:"+score);
+			}
+		}
+		return score;
+	}
+	
+	/**boucler sur tous les obstacles et supprimer les obstacle déjà passés 
+	 * aussi mettre à jour les positions et draw tous les obstacles 
+	 * 
+	 * @param ghost
+	 * @param deltaTime
+	 * @param gc
+	 */
+	public void supprimerObstaclesPasses(Ghost ghost, double deltaTime, GraphicsContext gc) {
+
+		for(Obstacle obstacle : tousObstacles) {
+			// si obstacle depasse mur gauche, supprimer, liberer memoire
+			if (obstacle.getX() + obstacle.getR() < 0 || obstacle.getX() - obstacle.getR() > FlappyGhost.WIDTH) { 
+				obstaclesASupprimer.add(obstacle);	// pour éviter erreur, garder en mémoire les obst à supprimer...
+			}
+			obstacle.setVx(ghost.getVitesseX()); // màj vitesse "apparente" des obstacles selon la vitesse du ghost 
+			obstacle.update(deltaTime); // update position
+			obstacle.testCollision(ghost);
+			obstacle.draw(gc);
+		}
+		//ensuite les supprimer
+		tousObstacles.removeAll(obstaclesASupprimer);
+	}
+	
+
+	
+	public int getScore() {
+		return score;
+	}
+
+	public void setScore(int score) {
+		this.score = score;
+	}
+
+
+}

@@ -1,8 +1,3 @@
-
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Random;
-
 import javafx.animation.AnimationTimer;
 import javafx.application.Application;
 import javafx.application.Platform;
@@ -14,26 +9,22 @@ import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Separator;
 import javafx.scene.image.Image;
-import javafx.scene.input.KeyCode;
-import javafx.scene.layout.Border;
-import javafx.scene.layout.BorderStroke;
-import javafx.scene.layout.BorderStrokeStyle;
-import javafx.scene.layout.BorderWidths;
-import javafx.scene.layout.CornerRadii;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 
+// Vue
+// attributs comme Text, Button, etc. 
+// aussi attribut Controleur 
 public class FlappyGhost extends Application {
-	private boolean pause = false;
-	private boolean debug = false;
-	private boolean playScheduled = false; // A boolean flag that gets set to true when the game is scheduled to be resumed after a pause.
-	private long lastTime = 0; //  A variable that stores the start time of the game's animation loop. It is used to calculate the elapsed time during pauses.
-	private long lastPause;
-	public int score = 0;
-	
+	private Controleur controleur;
+	Text scoreText = new Text("Score: 0");
+	GraphicsContext gc;
+	//buttons
+	Button button = new Button("Pause");
+	CheckBox checkbox = new CheckBox("mode debug");
 	
 	public static final int WIDTH = 640, HEIGHT = 440;
 
@@ -47,57 +38,42 @@ public class FlappyGhost extends Application {
 		String path = System.getProperty("user.dir");
 
 		VBox root = new VBox();
-		root.setBorder(new Border(new BorderStroke(Color.GREEN, 
-				BorderStrokeStyle.SOLID, CornerRadii.EMPTY, new BorderWidths(3))));
-
 		HBox barre = new HBox();
-		barre.setBorder(new Border(new BorderStroke(Color.RED, 
-				BorderStrokeStyle.SOLID, CornerRadii.EMPTY, new BorderWidths(3))));
 
 		barre.setSpacing(10);
 		barre.setAlignment(Pos.CENTER);
 
 		Scene scene = new Scene(root, WIDTH, HEIGHT, Color.AQUAMARINE);
 		Canvas canvas = new Canvas(WIDTH, 400);
-		GraphicsContext gc = canvas.getGraphicsContext2D();
+		gc = canvas.getGraphicsContext2D();
 		Image img = new Image(path + "/src/bg.png");
 		gc.drawImage(img, 0, 0);
-
 
 		root.getChildren().add(canvas);
 		root.getChildren().add(new Separator());
 		root.getChildren().add(barre);
 		
-		//score
-		Text scoreText = new Text("Score: " + score);
+		controleur = new Controleur(this); // instancier controleur
 
 		Ghost ghost = new Ghost(WIDTH/2, HEIGHT/2); // position au centre
-
-
+		
 		//key
+		 /* Lorsqu'un événement se produit, la vue va simplement
+         * avertir le contrôleur qu'il vient de se passer quelque chose.
+         * La vue ne doit *pas* gérer l'événement elle-même.
+         */
 		scene.setOnKeyPressed((event)->{
-			if (event.getCode() == KeyCode.SPACE) {
-				ghost.sauter();
-			}
-
-			if (event.getCode() == KeyCode.ESCAPE) {
-				Platform.exit(); //ESC => exit
-			}
-
+			controleur.gererKeyPress(event, ghost);
 		});
 
 
 		
 		AnimationTimer timer = new AnimationTimer() {
-			private ArrayList<Obstacle> tousObstacles = new ArrayList<>();
-			private ArrayList<Obstacle> obstaclesASupprimer = new ArrayList<>();
-			private HashSet<Obstacle> obstaclesDepasses = new HashSet<>();
-			private int nbObstaclesRencontres = 0;
 			
 			private long lastTimeObstacle = 0;
-			private double x = 0, y = 0;
-			private double frameRate = 1e-9;
-			
+			private double positionXImageBg = 0;
+			private final double frameRate = 1e-9;
+			private long lastTime = 0;
 			
 			@Override
 			public void handle(long now) {
@@ -109,73 +85,42 @@ public class FlappyGhost extends Application {
 				double deltaTime = (now - lastTime) * frameRate;
 				double deltaTimeObstacle = (now - lastTimeObstacle) * frameRate;
 				
-				if (!pause) { // seulement si pas en pause
-					if(playScheduled) { // si reprise
-						lastTime += (now - lastPause); // TODO marche pas :( 
-					}
+				if (!controleur.isPause()) { // seulement si pas en pause
+//					if(playScheduled) { // si reprise
+//						lastTime += (now - lastPause); // TODO marche pas :( 
+//					}
 					
-					x = (x + deltaTime * ghost.getVitesseX()) % WIDTH;
-					//Le fantôme se déplace vers la droite à une vitesse constante initiale de 120 pixels par seconde.
+					positionXImageBg = (positionXImageBg + deltaTime * ghost.getVitesseX()) % WIDTH;
+					// c'est l'image bg qui bouge à la vitesse du ghost
+					//"Le fantôme se déplace vers la droite à une vitesse constante initiale de 120 pixels par seconde."
 
-					// bg 
+					// bg: 2 images côte à côte, cyclique
 					gc.clearRect(0, 0, WIDTH, HEIGHT);
-					gc.drawImage(img, x, y);
-					gc.drawImage(img, x+WIDTH, y);
+					gc.drawImage(img, positionXImageBg, 0);
+					gc.drawImage(img, positionXImageBg+WIDTH, 0);
 
 					// ghost
 					ghost.update(deltaTime);
 					ghost.draw(gc);
 
-					// toutes les 3 secondes
+					// toutes les 3 secondes, nouvel obstacle
 					if (deltaTimeObstacle>=3) {
-						//creer nouvel obstacle
-						nbObstaclesRencontres++; //compter nb obstacles
-						Random random = new Random();
-						int yObst = random.nextInt(0,FlappyGhost.HEIGHT);
-						Obstacle obstacle = new Obstacle(WIDTH, yObst, ghost.getVitesseX());
-						tousObstacles.add(obstacle);
-						lastTimeObstacle = now;
-
-						// À chaque deux obstacles rencontrés, la gravité doit augmenter de 15 vers le bas
-						// À chaque deux obstacles dépassés, la vitesse horizontale du joueur augmente de 15 pixels par seconde.
-						if (nbObstaclesRencontres % 2 == 0) {
-							ghost.setAy(ghost.getAy()+15);
-							ghost.setVitesseX(ghost.getVitesseX()-15);
-						}
-
-
+						controleur.nouvelObstacle(ghost);
+						lastTimeObstacle = now; // reinitialiser compteur 3 sec
 					}
-					// Chaque fois que le joueur dépasse, son score augmente de 5 points.
-					for(Obstacle obstacle : tousObstacles) {
-						if (ghost.depasse(obstacle)) {
-							obstaclesDepasses.add(obstacle); 
-							score = obstaclesDepasses.size() * 5;
-							scoreText.setText("Score: " + score);
-//							System.out.println("score:"+score);
-						}
-					}
+
+					// Chaque fois que le joueur dépasse un obst, son score augmente de 5 points.
+					controleur.calculerEtAfficherScore(ghost, scoreText);
 					
-					for(Obstacle obstacle : tousObstacles) {
-						// si obstacle depasse mur gauche, supprimer, liberer memoire
-						if (obstacle.getX() + obstacle.getR() < 0 || obstacle.getX() - obstacle.getR() > WIDTH) { 
-							obstaclesASupprimer.add(obstacle);	// pour éviter erreur, garder en mémoire les obst à supprimer...
-						}
-						obstacle.setVx(ghost.getVitesseX()); // màj vitesse "apparente" des obstacles selon la vitesse du ghost 
-						obstacle.update(deltaTime);
-						obstacle.testCollision(ghost);
-						obstacle.draw(gc);
-					}
-					//ensuite les supprimer
-					tousObstacles.removeAll(obstaclesASupprimer);
-
+					// libérer mémoire (supprimer anciens obstacles passés)
+					controleur.supprimerObstaclesPasses(ghost, deltaTime);
+					
 					//update time
 					lastTime = now;
 				} 
-
 			}
 		};
 		timer.start();
-
 
 		// set scene
 		stage.setScene(scene);
@@ -184,31 +129,19 @@ public class FlappyGhost extends Application {
 		stage.setResizable(false);
 		stage.show();
 
-
-		//buttons
-		Button button = new Button("Pause");
-		CheckBox checkbox = new CheckBox("mode debug");
-		 
+		// barre en bas
 		barre.getChildren().add(button);
 		barre.getChildren().add(checkbox);
 		barre.getChildren().add(scoreText);
 
-		//button & checkbox actions
+		//bouton pause
 		button.setOnAction((e) -> {
-			pause = !pause;
-			if (pause) { // si pause
-				lastPause = lastTime;
-				playScheduled = true;
-			}
-			System.out.println("pause: " + pause);
+			controleur.gererBoutonPause();
 		});
 
+		// checkbox mode debug 
 		checkbox.setOnAction((e)->{
-			if(checkbox.isSelected()) {
-				System.out.println("checked");
-			} else {
-				System.out.println("not checked");
-			}
+			controleur.gererCheckbox();
 		});
 
 
@@ -224,6 +157,10 @@ public class FlappyGhost extends Application {
 			canvas.requestFocus();
 		});
 
+	}
+	
+	public void drawObstacle(Obstacle obstacle) {
+		obstacle.draw(gc);
 	}
 
 

@@ -8,7 +8,6 @@ public abstract class Entity {
     protected double vx;
     
 
-    
     public Entity(double x, double y) {
     	this.x = x;
     	this.y = y;
