@@ -1,5 +1,6 @@
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Random;
 
 import javafx.animation.AnimationTimer;
@@ -31,6 +32,7 @@ public class FlappyGhost extends Application {
 	private boolean playScheduled = false; // A boolean flag that gets set to true when the game is scheduled to be resumed after a pause.
 	private long lastTime = 0; //  A variable that stores the start time of the game's animation loop. It is used to calculate the elapsed time during pauses.
 	private long lastPause;
+	private int score = 0;
 	
 	public static final int WIDTH = 640, HEIGHT = 440;
 
@@ -84,7 +86,8 @@ public class FlappyGhost extends Application {
 		
 		AnimationTimer timer = new AnimationTimer() {
 			private ArrayList<Obstacle> tousObstacles = new ArrayList<>();
-			private ArrayList<Obstacle> obstaclesPasses = new ArrayList<>();
+			private ArrayList<Obstacle> obstaclesASupprimer = new ArrayList<>();
+			private HashSet<Obstacle> obstaclesDepasses = new HashSet<>();
 			private int nbObstaclesRencontres = 0;
 			
 			private long lastTimeObstacle = 0;
@@ -132,23 +135,30 @@ public class FlappyGhost extends Application {
 						// À chaque deux obstacles rencontrés, la gravité doit augmenter de 15 vers le bas
 						if (nbObstaclesRencontres % 2 == 0) {
 							ghost.setAy(ghost.getAy()+15);
-							System.out.println("ay: " + ghost.getAy()); // TODO 
 						}
 
 
 					}
-
+					// Chaque fois que le joueur dépasse, son score augmente de 5 points.
+					for(Obstacle obstacle : tousObstacles) {
+						if (ghost.depasse(obstacle)) {
+							obstaclesDepasses.add(obstacle); // TODO comment gerer? on veut +5 une fois
+							score = obstaclesDepasses.size() * 5;
+							System.out.println("score:"+score);
+						}
+					}
+					
 					for(Obstacle obstacle : tousObstacles) {
 						// si obstacle depasse mur gauche, supprimer, liberer memoire
 						if (obstacle.getX() + obstacle.getR() < 0 || obstacle.getX() - obstacle.getR() > WIDTH) { 
-							obstaclesPasses.add(obstacle);	
+							obstaclesASupprimer.add(obstacle);	
 						}
 						obstacle.update(deltaTime);
 						obstacle.testCollision(ghost);
 						obstacle.draw(gc);
 					}
 					//remove all 
-					tousObstacles.removeAll(obstaclesPasses);
+					tousObstacles.removeAll(obstaclesASupprimer);
 
 					//update time
 					lastTime = now;
@@ -170,7 +180,7 @@ public class FlappyGhost extends Application {
 		//buttons
 		Button button = new Button("Pause");
 		CheckBox checkbox = new CheckBox("mode debug");
-		Text textScore = new Text("Score: --");
+		Text textScore = new Text("Score: " + score); // TODO update 
 		barre.getChildren().add(button);
 		barre.getChildren().add(checkbox);
 		barre.getChildren().add(textScore);

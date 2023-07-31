@@ -76,6 +76,10 @@ public class Ghost extends Entity {
     
     /*La vitesse en y ne doit jamais dépasser 300 vers le haut ou vers le bas. Si jamais la vitesse
     dépasse les 300, on la force à rester à une magnitude de 300 (en considérant sa direction haut/bas)*/
+    /**
+     * @param vy
+     * @return
+     */
     public static double plafonnerVy(double vy) {
     	if (vy>300) {
     		return 300;
@@ -84,6 +88,21 @@ public class Ghost extends Entity {
     	} else {
     		return vy;
     	}
+    }
+    
+    /*Chaque fois que le joueur dépasse horizontalement un obstacle (autrement dit, lorsque son extrémité
+     * gauche dépasse l’extrémité droite de l’obstacle), son score augmente de 5 points.*/
+    /**
+     * @param obstacle
+     * @return true si le joueur depasse l'obstacle
+     */
+    public boolean depasse(Obstacle obstacle) {
+    	double extremiteGaucheGhost = this.x - this.r;
+//    	System.out.println("extremiteGaucheGhost:"+extremiteGaucheGhost);
+    	double extremiteDroiteObst = obstacle.x + obstacle.r;
+//    	System.out.println("extremiteDroiteObst:"+extremiteDroiteObst);
+//    	System.out.println((extremiteDroiteObst<extremiteGaucheGhost));
+    	return (extremiteDroiteObst<extremiteGaucheGhost);
     }
 
 	public int getVitesseX() {

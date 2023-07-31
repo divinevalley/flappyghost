@@ -6,7 +6,7 @@ import javafx.scene.paint.Color;
 public class Obstacle extends Entity {
 	private int type; // type de mvmt 1, 2, ou 3 
 	private double timeSinceTeleport=0; 
-	
+	private boolean depasse = false;
 	/**
 	 * @param x
 	 */
@@ -38,9 +38,9 @@ public class Obstacle extends Entity {
 			break;
 		case 3: // quantique: se téléportent d’une distance aléatoire comprise entre -30 et 30 pixels en x
 			// et en y, périodiquement à chaque 0.2 seconde.
-			System.out.println("dt:"+dt);
+			
 			timeSinceTeleport += dt; 
-			System.out.println("timeSince: "+timeSinceTeleport);
+			
 			if (timeSinceTeleport >= 0.2) {
 				timeSinceTeleport=0; //reset
 				Random random = new Random();
@@ -69,6 +69,18 @@ public class Obstacle extends Entity {
 
 	public void setType(int type) {
 		this.type = type;
+	}
+
+
+
+	public boolean getDepasse() {
+		return depasse;
+	}
+
+
+
+	public void setDepasse(boolean depasse) {
+		this.depasse = depasse;
 	}
 
 
