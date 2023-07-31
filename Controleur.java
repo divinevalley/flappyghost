@@ -61,14 +61,13 @@ public class Controleur {
 	}
 	
 	/**
+	 * gerer action checkbox (activer/desactiver mode debug)
 	 * @param checkbox
 	 */
 	public void gererCheckbox() {
 		if(vue.checkbox.isSelected()) {
-			System.out.println("checked");
 			debug = true;
 		} else {
-			System.out.println("not checked");
 			debug = false;
 		}
 	}

@@ -1,6 +1,7 @@
 import javafx.animation.AnimationTimer;
 import javafx.application.Application;
 import javafx.application.Platform;
+import javafx.geometry.Orientation;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
@@ -16,8 +17,15 @@ import javafx.scene.text.Text;
 import javafx.stage.Stage;
 
 // Vue
-// attributs comme Text, Button, etc. 
-// aussi attribut Controleur 
+
+/*
+ * TODO: 
+ * - collision = score 0 , recommencer 
+ * - pause
+ * - requestfocus marche pas 
+ * 
+ * */
+
 public class FlappyGhost extends Application {
 	private Controleur controleur;
 	Text scoreText = new Text("Score: 0");
@@ -130,7 +138,13 @@ public class FlappyGhost extends Application {
 
 		// barre en bas
 		barre.getChildren().add(button);
+		Separator separator1 = new Separator();
+		separator1.setOrientation(Orientation.VERTICAL);
+		barre.getChildren().add(separator1);
 		barre.getChildren().add(checkbox);
+		Separator separator2 = new Separator();
+		separator2.setOrientation(Orientation.VERTICAL);
+		barre.getChildren().add(separator2);
 		barre.getChildren().add(scoreText);
 
 		//bouton pause
