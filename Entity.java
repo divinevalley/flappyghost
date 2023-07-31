@@ -17,7 +17,7 @@ public abstract class Entity {
     
 	
 	 /**
-    * Met à jour la position et la vitesse de l'obstacle
+    * Met à jour la position et la vitesse de l'objet
     *
     * @param dt Temps écoulé depuis le dernier update() en secondes
     */
@@ -37,9 +37,6 @@ public abstract class Entity {
        if (this.intersects(other)) {
     	   intersects = true;
     	   other.intersects = true; 
-    	   System.out.println("intersects");
-    	   System.out.println("this.x: " + this.x  + " other.x: " + other.x);
-    	   System.out.println("this.y: " + this.y  + " other.y: " + other.y);
 
        } else {
     	   this.intersects = false;

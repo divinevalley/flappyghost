@@ -2,7 +2,8 @@ import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
 
 public class Ghost extends Entity {
-	private int vitesseX;  // NB: c'est la vitesse de l'image de fond
+	private int vitesseX;  
+	// NB: c'est la vitesse de l'image de fond. vx du ghost represente la vitesse du vrai x sur l'ecran (0 car ne bouge pas sur le plan droite/gauche)
 	
     
     /*Un saut change instantanément la vitesse en y du fantôme à 300 vers le haut*/
