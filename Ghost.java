@@ -65,7 +65,7 @@ public class Ghost extends Entity {
 		if (x + r > FlappyGhost.WIDTH || x - r < 0) { // TODO remove (va jamais toucher murs cotes) 
 			vx *= -0.5; // apres mur, vitesse diminue 
 		}
-		if (y + r > FlappyGhost.HEIGHT - 40 || y - r < 0) { // si touche plafond/sol
+		if (y + r > FlappyGhost.HEIGHTCANVAS || y - r < 0) { // si touche plafond/sol
 			vy *= -0.5;
 			vy = plafonnerVy(vy);
 		}
@@ -73,7 +73,7 @@ public class Ghost extends Entity {
 		x = Math.min(x, FlappyGhost.WIDTH - r); // corriger glitch travserse mur
 		x = Math.max(x, r);
 
-		y = Math.min(y, FlappyGhost.HEIGHT - 40 - r);
+		y = Math.min(y, FlappyGhost.HEIGHTCANVAS - r);
 		y = Math.max(y, r);
 
 	}

@@ -44,7 +44,7 @@ public class Modele {
 			if (ghost.depasse(obstacle)) {
 				obstaclesDepasses.add(obstacle); 
 				score = obstaclesDepasses.size() * 5;
-				scoreText.setText("Score: " + score);
+//				scoreText.setText("Score: " + score);
 //				System.out.println("score:"+score);
 			}
 		}
@@ -67,7 +67,7 @@ public class Modele {
 	 * @return true si collision
 	 */
 	public boolean drawUpdateObstacles(Ghost ghost, double deltaTime, GraphicsContext gc, boolean debug) {
-
+		boolean estCollision = false; 
 		//supprimer anciens obstacles 
 		for(Obstacle obstacle : tousObstacles) {
 			// si obstacle depasse mur gauche, supprimer, liberer memoire
@@ -79,14 +79,14 @@ public class Modele {
 			obstacle.setVx(ghost.getVitesseX()); // màj vitesse "apparente" des obstacles selon la vitesse du ghost 
 			obstacle.update(deltaTime); // update position
 			if (obstacle.testCollision(ghost)) {
-				return true; //collision
+				estCollision = true; //collision
 			}
 			
 			obstacle.draw(gc, debug);
 		}
 		//ensuite les supprimer
 		tousObstacles.removeAll(obstaclesASupprimer);
-		return false; // si on arrive a sortir de la boucle, ca veut dire pas de collision
+		return estCollision;
 	}
 	
 

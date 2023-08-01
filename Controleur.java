@@ -2,6 +2,9 @@
 import javafx.application.Platform;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.paint.Color;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
 
 // demandé à Modèle de faire les calculs, demande à Vue de màj infos (selon Modèle)
@@ -11,6 +14,10 @@ public class Controleur {
 	
 	private boolean pause = false;
 	private boolean debug = false;
+	
+	// pause
+	private boolean reprise = false;
+	private long lastPause = 0;
 
 	
 	/** constructeur
@@ -20,8 +27,6 @@ public class Controleur {
 	public Controleur(FlappyGhost vue) {
 		this.modele = new Modele();
 		this.vue = vue;
-		// TODO initialiser affichage (de score?) 
-		
 	}
 	
 	public void nouvelObstacle(Ghost ghost) {
@@ -30,28 +35,36 @@ public class Controleur {
 	
 	// Chaque fois que le joueur dépasse un obst, son score augmente de 5 points.
 	// maj affichage score 
-	public void calculerEtAfficherScore(Ghost ghost, Text scoreText) {
-		int score = modele.calculerScore(ghost, scoreText);
+	public void calculerEtAfficherScore(Text scoreText) {
+		int score = modele.calculerScore(vue.getGhost(), scoreText);
 		// update scoretext
-		vue.scoreText.setText("Score: " + score);
+		vue.getScoreText().setText("Score: " + score);
+		if(score>0) {
+			vue.getScoreText().setFill(Color.BLACK);			
+		}
+
 	}
 	
-	public void drawUpdateObstacles(Ghost ghost, double deltaTime) {
-		boolean collision = modele.drawUpdateObstacles(ghost, deltaTime, vue.gc, debug); // demande à modèle de supprimer anciens obstacles
+	public void drawUpdateObstacles(double deltaTime) {
+		// demande à modèle de supprimer anciens obstacles, et detecter collisions
+		boolean collision = modele.drawUpdateObstacles(vue.getGhost(), deltaTime, vue.getGc(), debug); 
 		if (collision) {
 			this.recommencerJeu();
 		}
 	}
 	
-	public void drawUpdateGhost(Ghost ghost, double deltaTime) {
-		ghost.update(deltaTime);
-		ghost.draw(vue.gc, debug);
+	public void drawUpdateGhost(double deltaTime) {
+		vue.getGhost().update(deltaTime);
+		vue.getGhost().draw(vue.getGc(), debug);
 	}
 	
 	public void recommencerJeu() {
 		if(!debug) { // si on joue pour de vrai, recommencer
 			modele.recommencerJeu();	
 			vue.instancierGhost();
+			vue.getScoreText().setFill(Color.RED);
+//			vue.getScoreText().setFont(Font.font(null, FontWeight.BOLD, 20));
+			System.out.println("red");
 		}
 
 	}
@@ -61,9 +74,9 @@ public class Controleur {
 	 * @param KeyEvent
 	 * @param ghost
 	 */
-	public void gererKeyPress(KeyEvent event, Ghost ghost) {
+	public void gererKeyPress(KeyEvent event) {
 		if (event.getCode() == KeyCode.SPACE) {
-			ghost.sauter();
+			vue.getGhost().sauter();
 		}
 
 		if (event.getCode() == KeyCode.ESCAPE) {
@@ -75,7 +88,7 @@ public class Controleur {
 	 * gere action checkbox (activer/desactiver mode debug)
 	 */
 	public void gererCheckbox() {
-		if(vue.checkbox.isSelected()) {
+		if(vue.getCheckbox().isSelected()) {
 			debug = true;
 		} else {
 			debug = false;
@@ -86,10 +99,20 @@ public class Controleur {
 	/**
 	 * gere action bouton pause
 	 */
-	public void gererBoutonPause() {
+	public void gererBoutonPause(long lastPause) {
 		pause = !pause;
-		System.out.println("pause: " + pause);
+		
+		if (pause) {
+			this.lastPause = lastPause;
+		} else {
+			reprise = true;
+		}
+		
 		vue.requestFocus();
+	}
+	
+	public void mettrePause(long now) {
+		lastPause = now;
 	}
 
 
@@ -99,6 +122,20 @@ public class Controleur {
 
 	public void setPause(boolean pause) {
 		this.pause = pause;
+	}
+	
+	
+
+	public boolean isReprise() {
+		return reprise;
+	}
+	
+	public void setReprise(boolean reprise) {
+		this.reprise = reprise;
+	}
+
+	public long getLastPause() {
+		return lastPause;
 	}
 
 	public boolean isDebug() {

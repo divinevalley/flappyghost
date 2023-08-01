@@ -20,26 +20,25 @@ import javafx.stage.Stage;
 
 /*
  * TODO: 
- * - pause
- * - collision recommencer faire plus visible (text "game over")   
+ * 
+ * - collision recommencer faire plus visible (text "game over")  
+ * - encapsulation 
  * */
 
 public class FlappyGhost extends Application {
 	private Controleur controleur;
-	Text scoreText = new Text("Score: 0");
-	GraphicsContext gc;
-	Text recommencer = new Text("Game Over! Recommencer");
+	private Ghost ghost;
+	private long lastPause;
 	
+	//elements graphiques
+	private Button button = new Button("Pause");
+	private CheckBox checkbox = new CheckBox("mode debug");
+	private Text scoreText = new Text("Score: 0");
+	private GraphicsContext gc;
 	private Canvas canvas;
 	private Scene scene;
 	
-	//buttons
-	Button button = new Button("Pause");
-	CheckBox checkbox = new CheckBox("mode debug");
-	//Ghost 
-	Ghost ghost;
-	
-	public static final int WIDTH = 640, HEIGHT = 440;
+	public static final int WIDTH = 640, HEIGHT = 440, HEIGHTCANVAS = 400;
 
 	public static void main(String[] args) {
 		launch(args);
@@ -57,14 +56,14 @@ public class FlappyGhost extends Application {
 		barre.setAlignment(Pos.CENTER);
 
 		scene = new Scene(root, WIDTH, HEIGHT, Color.AQUAMARINE);
-		canvas = new Canvas(WIDTH, 400);
+		canvas = new Canvas(WIDTH, HEIGHTCANVAS);
 		gc = canvas.getGraphicsContext2D();
 		
 		// mettre bg
 		Image img = new Image(path + "/src/bg.png");
 		gc.drawImage(img, 0, 0);
 		
-
+		// placer canvas et barre
 		root.getChildren().add(canvas);
 		root.getChildren().add(new Separator());
 		root.getChildren().add(barre);
@@ -75,8 +74,10 @@ public class FlappyGhost extends Application {
 		
 		//gerer keypress
 		scene.setOnKeyPressed((event)->{
-			controleur.gererKeyPress(event, ghost);
+			controleur.gererKeyPress(event);
 		});
+		
+		requestFocus();
 
 
 		AnimationTimer timer = new AnimationTimer() {
@@ -93,25 +94,26 @@ public class FlappyGhost extends Application {
 					return;
 				}
 
-				double deltaTime = (now - lastTime) * frameRate;
-				double deltaTimeObstacle = (now - lastTimeObstacle) * frameRate;
-				
 				if (!controleur.isPause()) { // seulement si pas en pause
-//					if(playScheduled) { // si reprise
-//						lastTime += (now - lastPause); // TODO marche pas :( 
-//					}
+					if(controleur.isReprise()) { // si reprise
+						double dureeDePause =(now - controleur.getLastPause()); 
+						lastTime += dureeDePause; // avancer lastTime de duree de pause
+						lastTimeObstacle += dureeDePause;
+						controleur.setReprise(false);
+					}
 					
+					double deltaTime = (now - lastTime) * frameRate;
+					double deltaTimeObstacle = (now - lastTimeObstacle) * frameRate;
+					
+					// bg: 2 images côte à côte, cyclique
 					positionXImageBg = (positionXImageBg + deltaTime * ghost.getVitesseX()) % WIDTH;
 					// c'est l'image bg qui bouge à la vitesse du ghost
-					//"Le fantôme se déplace vers la droite à une vitesse constante initiale de 120 pixels par seconde."
-
-					// bg: 2 images côte à côte, cyclique
 					gc.clearRect(0, 0, WIDTH, HEIGHT);
 					gc.drawImage(img, positionXImageBg, 0);
 					gc.drawImage(img, positionXImageBg+WIDTH, 0);
 
 					// ghost
-					controleur.drawUpdateGhost(ghost, deltaTime);
+					controleur.drawUpdateGhost(deltaTime);
 
 					// toutes les 3 secondes, nouvel obstacle
 					if (deltaTimeObstacle>=3) {
@@ -120,13 +122,14 @@ public class FlappyGhost extends Application {
 					}
 
 					// Chaque fois que le joueur dépasse un obst, son score augmente de 5 points.
-					controleur.calculerEtAfficherScore(ghost, scoreText);
+					controleur.calculerEtAfficherScore(scoreText);
 					
-					// libérer mémoire (supprimer anciens obstacles passés), draw obstacles
-					controleur.drawUpdateObstacles(ghost, deltaTime);
+					// draw obstacles, supprimer anciens obstacles passés 
+					controleur.drawUpdateObstacles(deltaTime);
 					
 					//update time
 					lastTime = now;
+					lastPause = now;
 				} 
 			}
 		};
@@ -139,7 +142,7 @@ public class FlappyGhost extends Application {
 		stage.setResizable(false);
 		stage.show();
 
-		// barre en bas
+		// barre en bas: Bouton Pause | [ ] mode debug | score 
 		barre.getChildren().add(button);
 		Separator separator1 = new Separator();
 		separator1.setOrientation(Orientation.VERTICAL);
@@ -152,7 +155,7 @@ public class FlappyGhost extends Application {
 
 		//bouton pause
 		button.setOnAction((e) -> {
-			controleur.gererBoutonPause();
+			controleur.gererBoutonPause(lastPause);
 		});
 
 		// checkbox mode debug 
@@ -163,8 +166,8 @@ public class FlappyGhost extends Application {
 	}
 	
 	
-	public void instancierGhost() { // appeler pour recommencer
-		ghost = new Ghost(WIDTH/2, HEIGHT/2); // position au centre
+	public void instancierGhost() { // appeler pour recommencer (reinitialiser ghost)
+		ghost = new Ghost(WIDTH/2, HEIGHTCANVAS/2); // position au centre
 	}
 	
 	public void requestFocus() {
@@ -179,6 +182,28 @@ public class FlappyGhost extends Application {
 			canvas.requestFocus();
 		});
 	}
+
+	public Ghost getGhost() {
+		return ghost;
+	}
+
+	public GraphicsContext getGc() {
+		return gc;
+	}
+
+	public Text getScoreText() {
+		return scoreText;
+	}
+
+	public void setScoreText(Text scoreText) {
+		this.scoreText = scoreText;
+	}
+
+	public CheckBox getCheckbox() {
+		return checkbox;
+	}
+	
+	
 
 
 }
