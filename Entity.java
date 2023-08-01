@@ -36,15 +36,18 @@ public abstract class Entity {
 	/**
 	 * met à jour le statut "intersects" (attribut) de chaque Entity si ils sont en intersection
 	 * (permet de savoir quelle couleur mettre) 
-	 * @param other
+	 * @param other Entity
+	 * @return boolean true si collision
 	 */
-	public void testCollision(Entity other) {
-		if (this.intersects(other)) {
+	public boolean testCollision(Entity other) {
+		if (this.intersects(other)) { // si collision
 			intersects = true;
 			other.intersects = true; 
+			return true;
 		} else {
 			this.intersects = false;
 			other.intersects = false;
+			return false;
 		}
 	}
 

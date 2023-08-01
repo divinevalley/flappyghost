@@ -20,19 +20,24 @@ import javafx.stage.Stage;
 
 /*
  * TODO: 
- * - collision = score 0 , recommencer 
  * - pause
- * - requestfocus marche pas 
- * 
+ * - collision recommencer faire plus visible (text "game over")   
  * */
 
 public class FlappyGhost extends Application {
 	private Controleur controleur;
 	Text scoreText = new Text("Score: 0");
 	GraphicsContext gc;
+	Text recommencer = new Text("Game Over! Recommencer");
+	
+	private Canvas canvas;
+	private Scene scene;
+	
 	//buttons
 	Button button = new Button("Pause");
 	CheckBox checkbox = new CheckBox("mode debug");
+	//Ghost 
+	Ghost ghost;
 	
 	public static final int WIDTH = 640, HEIGHT = 440;
 
@@ -51,11 +56,14 @@ public class FlappyGhost extends Application {
 		barre.setSpacing(10);
 		barre.setAlignment(Pos.CENTER);
 
-		Scene scene = new Scene(root, WIDTH, HEIGHT, Color.AQUAMARINE);
-		Canvas canvas = new Canvas(WIDTH, 400);
+		scene = new Scene(root, WIDTH, HEIGHT, Color.AQUAMARINE);
+		canvas = new Canvas(WIDTH, 400);
 		gc = canvas.getGraphicsContext2D();
+		
+		// mettre bg
 		Image img = new Image(path + "/src/bg.png");
 		gc.drawImage(img, 0, 0);
+		
 
 		root.getChildren().add(canvas);
 		root.getChildren().add(new Separator());
@@ -63,19 +71,14 @@ public class FlappyGhost extends Application {
 		
 		controleur = new Controleur(this); // instancier controleur
 
-		Ghost ghost = new Ghost(WIDTH/2, HEIGHT/2); // position au centre
+		instancierGhost();
 		
-		//key
-		 /* Lorsqu'un événement se produit, la vue va simplement
-         * avertir le contrôleur qu'il vient de se passer quelque chose.
-         * La vue ne doit *pas* gérer l'événement elle-même.
-         */
+		//gerer keypress
 		scene.setOnKeyPressed((event)->{
 			controleur.gererKeyPress(event, ghost);
 		});
 
 
-		
 		AnimationTimer timer = new AnimationTimer() {
 			
 			private long lastTimeObstacle = 0;
@@ -119,8 +122,8 @@ public class FlappyGhost extends Application {
 					// Chaque fois que le joueur dépasse un obst, son score augmente de 5 points.
 					controleur.calculerEtAfficherScore(ghost, scoreText);
 					
-					// libérer mémoire (supprimer anciens obstacles passés)
-					controleur.supprimerObstaclesPasses(ghost, deltaTime);
+					// libérer mémoire (supprimer anciens obstacles passés), draw obstacles
+					controleur.drawUpdateObstacles(ghost, deltaTime);
 					
 					//update time
 					lastTime = now;
@@ -156,9 +159,15 @@ public class FlappyGhost extends Application {
 		checkbox.setOnAction((e)->{
 			controleur.gererCheckbox();
 		});
-
-
-
+		
+	}
+	
+	
+	public void instancierGhost() { // appeler pour recommencer
+		ghost = new Ghost(WIDTH/2, HEIGHT/2); // position au centre
+	}
+	
+	public void requestFocus() {
 		/* Après l’exécution de la fonction, le
 		focus va automatiquement au canvas */
 		Platform.runLater(() -> {
@@ -169,12 +178,7 @@ public class FlappyGhost extends Application {
 		scene.setOnMouseClicked((event) -> {
 			canvas.requestFocus();
 		});
-
 	}
-	
-//	public void drawObstacle(Obstacle obstacle) {
-//		obstacle.draw(gc, controleur.isDebug());
-//	}
 
 
 }

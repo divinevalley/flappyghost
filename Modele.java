@@ -51,27 +51,42 @@ public class Modele {
 		return score;
 	}
 	
-	/**boucler sur tous les obstacles et supprimer les obstacle déjà passés 
+	public void recommencerJeu() {
+		tousObstacles.clear();
+		obstaclesDepasses.clear();
+		nbObstaclesRencontres = 0;
+		score = 0; // pas vraiment besoin car calculer score sera appelé 
+	}
+	
+	/**Boucler sur tous les obstacles et supprimer les obstacle déjà passés 
 	 * aussi mettre à jour les positions et draw tous les obstacles 
 	 * 
 	 * @param ghost
 	 * @param deltaTime
-	 * @param gc
+	 * @param gc graphicscontext
+	 * @return true si collision
 	 */
-	public void supprimerObstaclesPasses(Ghost ghost, double deltaTime, GraphicsContext gc, boolean debug) {
+	public boolean drawUpdateObstacles(Ghost ghost, double deltaTime, GraphicsContext gc, boolean debug) {
 
+		//supprimer anciens obstacles 
 		for(Obstacle obstacle : tousObstacles) {
 			// si obstacle depasse mur gauche, supprimer, liberer memoire
-			if (obstacle.getX() + obstacle.getR() < 0 || obstacle.getX() - obstacle.getR() > FlappyGhost.WIDTH) { 
+			if (obstacle.getX() + obstacle.getR() < 0) { 
 				obstaclesASupprimer.add(obstacle);	// pour éviter erreur, garder en mémoire les obst à supprimer...
 			}
+			
+			// partie draw/update: 
 			obstacle.setVx(ghost.getVitesseX()); // màj vitesse "apparente" des obstacles selon la vitesse du ghost 
 			obstacle.update(deltaTime); // update position
-			obstacle.testCollision(ghost);
+			if (obstacle.testCollision(ghost)) {
+				return true; //collision
+			}
+			
 			obstacle.draw(gc, debug);
 		}
 		//ensuite les supprimer
 		tousObstacles.removeAll(obstaclesASupprimer);
+		return false; // si on arrive a sortir de la boucle, ca veut dire pas de collision
 	}
 	
 

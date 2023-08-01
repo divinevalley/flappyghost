@@ -36,18 +36,29 @@ public class Controleur {
 		vue.scoreText.setText("Score: " + score);
 	}
 	
-	public void supprimerObstaclesPasses(Ghost ghost, double deltaTime) {
-		modele.supprimerObstaclesPasses(ghost, deltaTime, vue.gc, debug); // demande à modèle de supprimer anciens obstacles
+	public void drawUpdateObstacles(Ghost ghost, double deltaTime) {
+		boolean collision = modele.drawUpdateObstacles(ghost, deltaTime, vue.gc, debug); // demande à modèle de supprimer anciens obstacles
+		if (collision) {
+			this.recommencerJeu();
+		}
 	}
 	
 	public void drawUpdateGhost(Ghost ghost, double deltaTime) {
 		ghost.update(deltaTime);
 		ghost.draw(vue.gc, debug);
 	}
+	
+	public void recommencerJeu() {
+		if(!debug) { // si on joue pour de vrai, recommencer
+			modele.recommencerJeu();	
+			vue.instancierGhost();
+		}
+
+	}
 
 	
-	/**
-	 * @param event
+	/**gere actions keypress: space fait sauter le fantome, Esc fait terminer le programme
+	 * @param KeyEvent
 	 * @param ghost
 	 */
 	public void gererKeyPress(KeyEvent event, Ghost ghost) {
@@ -61,8 +72,7 @@ public class Controleur {
 	}
 	
 	/**
-	 * gerer action checkbox (activer/desactiver mode debug)
-	 * @param checkbox
+	 * gere action checkbox (activer/desactiver mode debug)
 	 */
 	public void gererCheckbox() {
 		if(vue.checkbox.isSelected()) {
@@ -70,11 +80,16 @@ public class Controleur {
 		} else {
 			debug = false;
 		}
+		vue.requestFocus();
 	}
 	
+	/**
+	 * gere action bouton pause
+	 */
 	public void gererBoutonPause() {
 		pause = !pause;
 		System.out.println("pause: " + pause);
+		vue.requestFocus();
 	}
 
 
