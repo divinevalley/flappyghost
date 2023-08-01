@@ -5,7 +5,7 @@ import javafx.scene.input.KeyEvent;
 
 /**
  * Contrôleur demande à Modèle de faire les calculs, 
- * demande à Vue de mettre à jour des infos (selon calculs du Modèle)
+ * demande à Vue de mettre à jour des infos pour l'affichage (selon calculs du Modèle)
  */
 public class Controleur extends AnimationTimer {
 	private Modele modele;
