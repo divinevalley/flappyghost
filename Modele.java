@@ -5,7 +5,9 @@ import java.util.Random;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.text.Text;
 
-// fait calculs, c'est tout
+/**
+ * Modele : fait calculs 
+ */
 public class Modele {
 	// attributs 
 	private ArrayList<Obstacle> tousObstacles = new ArrayList<>();
@@ -15,9 +17,8 @@ public class Modele {
 	private int score = 0;
 	
 	
-	// méthodes
-	
-	/**
+	/**Creer un nouvel obstacle, l'ajouter à la liste d'obstacles à gérer.
+	 * Augmenter la vitesse/gravité du jeu au besoin.   
 	 * @param ghost
 	 */
 	public void creerNouvelObstacle(Ghost ghost) {
@@ -37,15 +38,17 @@ public class Modele {
 		}
 	}
 	
-	// Chaque fois que le joueur dépasse un obst, son score augmente de 5 points.
-	// calcul, retourner int
-	public int calculerScore(Ghost ghost, Text scoreText) {
+	/**
+	 * Chaque fois que le joueur dépasse un obstacle, son score augmente de 5 points.
+	 * calcul, retourner int
+	 * @param ghost
+	 * @return int score
+	 */
+	public int calculerScore(Ghost ghost) {
 		for(Obstacle obstacle : tousObstacles) {
 			if (ghost.depasse(obstacle)) {
 				obstaclesDepasses.add(obstacle); 
 				score = obstaclesDepasses.size() * 5;
-//				scoreText.setText("Score: " + score);
-//				System.out.println("score:"+score);
 			}
 		}
 		return score;
@@ -58,12 +61,13 @@ public class Modele {
 		score = 0; // pas vraiment besoin car calculer score sera appelé 
 	}
 	
-	/**Boucler sur tous les obstacles et supprimer les obstacle déjà passés 
-	 * aussi mettre à jour les positions et draw tous les obstacles 
+	/**Boucler sur tous les obstacles et mettre à jour les positions et draw tous les obstacles  
+	 * Supprimer les obstacles déjà passés (libérer mémoire)
 	 * 
 	 * @param ghost
 	 * @param deltaTime
-	 * @param gc graphicscontext
+	 * @param gc (GraphicsContext)
+	 * @param statut debug (pour informer la fonction draw())
 	 * @return true si collision
 	 */
 	public boolean drawUpdateObstacles(Ghost ghost, double deltaTime, GraphicsContext gc, boolean debug) {
@@ -90,14 +94,6 @@ public class Modele {
 	}
 	
 
-	
-	public int getScore() {
-		return score;
-	}
-
-	public void setScore(int score) {
-		this.score = score;
-	}
 
 
 }

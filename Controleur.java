@@ -1,24 +1,32 @@
-
+import javafx.animation.AnimationTimer;
 import javafx.application.Platform;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
-import javafx.scene.paint.Color;
-import javafx.scene.text.Font;
-import javafx.scene.text.FontWeight;
-import javafx.scene.text.Text;
 
-// demandé à Modèle de faire les calculs, demande à Vue de màj infos (selon Modèle)
-public class Controleur {
+/**
+ * Contrôleur demande à Modèle de faire les calculs, 
+ * demande à Vue de mettre à jour des infos (selon calculs du Modèle)
+ */
+public class Controleur extends AnimationTimer {
 	private Modele modele;
 	private FlappyGhost vue;
 	
+	private Ghost ghost;
+	
+	// parametres bouton/checkbox
 	private boolean pause = false;
 	private boolean debug = false;
+
+	// pour Animation Timer : 
+	private long lastTimeObstacle = 0;
+	private double positionXImageBg = 0;
+	private final double frameRate = 1e-9;
+	private long lastTime = 0;
 	
-	// pause
+	// paramètres pause
 	private boolean reprise = false;
 	private long lastPause = 0;
-
+	
 	
 	/** constructeur
 	 * @param modele
@@ -29,44 +37,108 @@ public class Controleur {
 		this.vue = vue;
 	}
 	
-	public void nouvelObstacle(Ghost ghost) {
-		modele.creerNouvelObstacle(ghost); // demande a Modele de creer obstacle
-	}
-	
-	// Chaque fois que le joueur dépasse un obst, son score augmente de 5 points.
-	// maj affichage score 
-	public void calculerEtAfficherScore(Text scoreText) {
-		int score = modele.calculerScore(vue.getGhost(), scoreText);
-		// update scoretext
-		vue.getScoreText().setText("Score: " + score);
-		if(score>0) {
-			vue.getScoreText().setFill(Color.BLACK);			
+	/**
+	 * Handler pour AnimationTimer : créer l'animation
+	 */
+	@Override
+	public void handle(long now) {
+		if (lastTime == 0) {
+			lastTime = now;
+			return;
 		}
 
+		if (!pause) { // rouler seulement si pas en pause
+			if(reprise) { // si reprise, ajuster selon duree de pause
+				double dureeDePause = (now - lastPause); 
+				lastTime += dureeDePause; // avancer lastTime de duree de pause
+				lastTimeObstacle += dureeDePause;
+				reprise = false;
+			}
+			
+			double deltaTime = (now - lastTime) * frameRate;
+			double deltaTimeObstacle = (now - lastTimeObstacle) * frameRate;
+			
+			// draw bg. à noter : c'est l'image bg qui bouge à la vitesse du ghost
+			positionXImageBg = (positionXImageBg + deltaTime * ghost.getVitesseX()) % FlappyGhost.WIDTH;
+			vue.drawBg(positionXImageBg);
+
+			// ghost
+			drawUpdateGhost(deltaTime);
+
+			// toutes les 3 secondes, nouvel obstacle
+			if (deltaTimeObstacle>=3) {
+				nouvelObstacle(ghost);
+				lastTimeObstacle = now; // reinitialiser compteur 3 sec
+			}
+
+			// Chaque fois que le joueur dépasse un obst, son score augmente de 5 points.
+			calculerEtAfficherScore();
+			
+			// draw obstacles, supprimer anciens obstacles passés 
+			drawUpdateObstacles(deltaTime);
+			
+			//update time
+			lastTime = now;
+			lastPause = now;
+		} 
 	}
 	
+
+	/**
+	 * demande a Modele de creer obstacle
+	 * @param ghost
+	 */
+	public void nouvelObstacle(Ghost ghost) {
+		modele.creerNouvelObstacle(ghost);
+	}
+	
+	
+	/**
+	 * Chaque fois que le joueur dépasse un obstacle, son score augmente de 5 points.
+	 * mettre a jour l'affichage score 
+	 */
+	public void calculerEtAfficherScore() {
+		int score = modele.calculerScore(ghost);
+		// update scoretext
+		vue.initialiserScoreText(score);		
+	}
+	
+	/**Demande à Modèle de draw tous les obstacles, supprimer les anciens, et detecter collisions 
+	 * @param deltaTime
+	 */
 	public void drawUpdateObstacles(double deltaTime) {
-		// demande à modèle de supprimer anciens obstacles, et detecter collisions
-		boolean collision = modele.drawUpdateObstacles(vue.getGhost(), deltaTime, vue.getGc(), debug); 
+		
+		boolean collision = modele.drawUpdateObstacles(ghost, deltaTime, vue.getGc(), debug); 
 		if (collision) {
 			this.recommencerJeu();
 		}
 	}
 	
+	/**
+	 * Mettre à jour la position du ghost, draw ghost
+	 * @param deltaTime
+	 */
 	public void drawUpdateGhost(double deltaTime) {
-		vue.getGhost().update(deltaTime);
-		vue.getGhost().draw(vue.getGc(), debug);
+		ghost.update(deltaTime);
+		ghost.draw(vue.getGc(), debug);
 	}
 	
+	/**
+	 * Recommencer jeu, réinitialiser tous les parametres dans modèle et objet ghost
+	 */
 	public void recommencerJeu() {
 		if(!debug) { // si on joue pour de vrai, recommencer
 			modele.recommencerJeu();	
-			vue.instancierGhost();
-			vue.getScoreText().setFill(Color.RED);
-//			vue.getScoreText().setFont(Font.font(null, FontWeight.BOLD, 20));
-			System.out.println("red");
+			instancierGhost();
 		}
-
+	}
+	
+	/** 
+	 * recommence le jeu en réinitialisant ghost et ses attributs
+	 */
+	public void instancierGhost() { 
+		ghost = new Ghost(FlappyGhost.WIDTH/2, FlappyGhost.HEIGHTCANVAS/2); 
+		// position au centre
 	}
 
 	
@@ -76,7 +148,7 @@ public class Controleur {
 	 */
 	public void gererKeyPress(KeyEvent event) {
 		if (event.getCode() == KeyCode.SPACE) {
-			vue.getGhost().sauter();
+			ghost.sauter();
 		}
 
 		if (event.getCode() == KeyCode.ESCAPE) {
@@ -93,57 +165,19 @@ public class Controleur {
 		} else {
 			debug = false;
 		}
-		vue.requestFocus();
+		vue.requestFocus(); // pour que "espace" fonctionne sur canvas
 	}
 	
 	/**
-	 * gere action bouton pause
+	 * gere action bouton pause (modifie les attributs pause et reprise, 
+	 * pour que l'AnimationTimer sache où/comment reprendre)
 	 */
-	public void gererBoutonPause(long lastPause) {
+	public void gererBoutonPause() {
 		pause = !pause;
-		
-		if (pause) {
-			this.lastPause = lastPause;
-		} else {
+		if (!pause) {
 			reprise = true;
 		}
-		
-		vue.requestFocus();
-	}
-	
-	public void mettrePause(long now) {
-		lastPause = now;
-	}
-
-
-	public boolean isPause() {
-		return pause;
-	}
-
-	public void setPause(boolean pause) {
-		this.pause = pause;
-	}
-	
-	
-
-	public boolean isReprise() {
-		return reprise;
-	}
-	
-	public void setReprise(boolean reprise) {
-		this.reprise = reprise;
-	}
-
-	public long getLastPause() {
-		return lastPause;
-	}
-
-	public boolean isDebug() {
-		return debug;
-	}
-
-	public void setDebug(boolean debug) {
-		this.debug = debug;
+		vue.requestFocus();// pour que "espace" fonctionne sur canvas
 	}
 	
 	

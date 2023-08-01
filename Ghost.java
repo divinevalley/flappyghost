@@ -34,6 +34,10 @@ public class Ghost extends Entity {
 		 * vers le bas*/
 	}
 
+	/**
+	 * affiche le fantôme en fonction du statut debug et statut collision (en mode debug,
+	 * ronds coloriés noir/rouge selon statut collision, et image si non debug) 
+	 */
 	@Override
 	public void draw(GraphicsContext context, boolean debug) {
 		if (debug) {
@@ -54,7 +58,7 @@ public class Ghost extends Entity {
 	/**
 	 * Met à jour la position et la vitesse du ghost
 	 *
-	 * @param dt Temps écoulé depuis le dernier update() en secondes
+	 * @param dt deltatime (Temps écoulé depuis le dernier update() en secondes)
 	 */
 	public void update(double dt) {
 
@@ -78,9 +82,9 @@ public class Ghost extends Entity {
 
 	}
 
-	/*La vitesse en y ne doit jamais dépasser 300 vers le haut ou vers le bas. Si jamais la vitesse
-    dépasse les 300, on la force à rester à une magnitude de 300 (en considérant sa direction haut/bas)*/
 	/**
+	 * La vitesse en y ne doit jamais dépasser 300 vers le haut ou vers le bas. Si jamais la vitesse
+    dépasse les 300, on la force à rester à une magnitude de 300 (en considérant sa direction haut/bas)
 	 * @param vy
 	 * @return vy ajusté
 	 */
@@ -94,9 +98,11 @@ public class Ghost extends Entity {
 		}
 	}
 
-	/* Chaque fois que le joueur dépasse horizontalement un obstacle (autrement dit, lorsque son extrémité
-	 * gauche dépasse l’extrémité droite de l’obstacle), son score augmente de 5 points.*/
 	/**
+	 * permet de savoir si le joueur dépasse horizontalement un obstacle 
+	 * (autrement dit, lorsque son extrémité gauche dépasse l’extrémité droite de l’obstacle)
+	 * (Important car si oui, son score augmente de 5 points)
+	 * 
 	 * @param obstacle
 	 * @return true si le joueur depasse l'obstacle
 	 */

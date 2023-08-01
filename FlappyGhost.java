@@ -1,4 +1,3 @@
-import javafx.animation.AnimationTimer;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.geometry.Orientation;
@@ -13,30 +12,49 @@ import javafx.scene.image.Image;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 
-// Vue
 
-/*
- * TODO: 
+/**
+ * IFT1025 Programmation 2 
+ * Eté 2023 
+ * TP2 : Flappy Ghost (JavaFX)
  * 
- * - collision recommencer faire plus visible (text "game over")  
- * - encapsulation 
- * */
-
+ * Utiliser la touche "espace" pour faire sauter le fantôme et éviter les obstacles. 
+ * Une seule collision entraine la perte du jeu, et le jeu recommence avec en score de 0. 
+ * 
+ * Le joueur gagne 5 points pour chaque obstacle dépassé. Tous les 2 obstacles, le fantôme 
+ * avance plus vite et la gravité augmente.  
+ * 
+ * Le mode debug permet d'afficher les objets en rond coloriés (en rouge pour indiquer collision) 
+ * et il sera impossible de perdre. 
+ * 
+ * La touche "Echappe" permet de sortir du programme. 
+ * 
+ *  Architecture MVC : 
+ *  Modèle
+ *  Vue (FlappyGhost.java)
+ *  Controleur
+ * 
+ * @author Deanna Wung, Meriem Ghaoui
+ *
+ */
 public class FlappyGhost extends Application {
 	private Controleur controleur;
-	private Ghost ghost;
-	private long lastPause;
+	
 	
 	//elements graphiques
 	private Button button = new Button("Pause");
 	private CheckBox checkbox = new CheckBox("mode debug");
-	private Text scoreText = new Text("Score: 0");
+	private Text scoreText = new Text("Score: ");
 	private GraphicsContext gc;
 	private Canvas canvas;
 	private Scene scene;
+	private String path = System.getProperty("user.dir");
+	private Image img = new Image(path + "/src/bg.png");
 	
 	public static final int WIDTH = 640, HEIGHT = 440, HEIGHTCANVAS = 400;
 
@@ -44,10 +62,11 @@ public class FlappyGhost extends Application {
 		launch(args);
 	}
 
+	/**
+	 * Fonction "start" de l'application JavaFX : créer la scène et tous les éléments graphiques
+	 */
 	@Override
 	public void start(Stage stage) throws Exception {
-
-		String path = System.getProperty("user.dir");
 
 		VBox root = new VBox();
 		HBox barre = new HBox();
@@ -55,12 +74,12 @@ public class FlappyGhost extends Application {
 		barre.setSpacing(10);
 		barre.setAlignment(Pos.CENTER);
 
-		scene = new Scene(root, WIDTH, HEIGHT, Color.AQUAMARINE);
+		scene = new Scene(root, WIDTH, HEIGHT);
 		canvas = new Canvas(WIDTH, HEIGHTCANVAS);
 		gc = canvas.getGraphicsContext2D();
 		
 		// mettre bg
-		Image img = new Image(path + "/src/bg.png");
+		
 		gc.drawImage(img, 0, 0);
 		
 		// placer canvas et barre
@@ -70,70 +89,16 @@ public class FlappyGhost extends Application {
 		
 		controleur = new Controleur(this); // instancier controleur
 
-		instancierGhost();
+		controleur.instancierGhost();
 		
 		//gerer keypress
 		scene.setOnKeyPressed((event)->{
 			controleur.gererKeyPress(event);
 		});
 		
-		requestFocus();
+		requestFocus(); // pour pas que le bouton soit activé par la barre espace par défaut
 
-
-		AnimationTimer timer = new AnimationTimer() {
-			
-			private long lastTimeObstacle = 0;
-			private double positionXImageBg = 0;
-			private final double frameRate = 1e-9;
-			private long lastTime = 0;
-			
-			@Override
-			public void handle(long now) {
-				if (lastTime == 0) {
-					lastTime = now;
-					return;
-				}
-
-				if (!controleur.isPause()) { // seulement si pas en pause
-					if(controleur.isReprise()) { // si reprise
-						double dureeDePause =(now - controleur.getLastPause()); 
-						lastTime += dureeDePause; // avancer lastTime de duree de pause
-						lastTimeObstacle += dureeDePause;
-						controleur.setReprise(false);
-					}
-					
-					double deltaTime = (now - lastTime) * frameRate;
-					double deltaTimeObstacle = (now - lastTimeObstacle) * frameRate;
-					
-					// bg: 2 images côte à côte, cyclique
-					positionXImageBg = (positionXImageBg + deltaTime * ghost.getVitesseX()) % WIDTH;
-					// c'est l'image bg qui bouge à la vitesse du ghost
-					gc.clearRect(0, 0, WIDTH, HEIGHT);
-					gc.drawImage(img, positionXImageBg, 0);
-					gc.drawImage(img, positionXImageBg+WIDTH, 0);
-
-					// ghost
-					controleur.drawUpdateGhost(deltaTime);
-
-					// toutes les 3 secondes, nouvel obstacle
-					if (deltaTimeObstacle>=3) {
-						controleur.nouvelObstacle(ghost);
-						lastTimeObstacle = now; // reinitialiser compteur 3 sec
-					}
-
-					// Chaque fois que le joueur dépasse un obst, son score augmente de 5 points.
-					controleur.calculerEtAfficherScore(scoreText);
-					
-					// draw obstacles, supprimer anciens obstacles passés 
-					controleur.drawUpdateObstacles(deltaTime);
-					
-					//update time
-					lastTime = now;
-					lastPause = now;
-				} 
-			}
-		};
-		timer.start();
+		controleur.start(); // start Animation Timer
 
 		// set scene
 		stage.setScene(scene);
@@ -155,7 +120,7 @@ public class FlappyGhost extends Application {
 
 		//bouton pause
 		button.setOnAction((e) -> {
-			controleur.gererBoutonPause(lastPause);
+			controleur.gererBoutonPause();
 		});
 
 		// checkbox mode debug 
@@ -166,10 +131,40 @@ public class FlappyGhost extends Application {
 	}
 	
 	
-	public void instancierGhost() { // appeler pour recommencer (reinitialiser ghost)
-		ghost = new Ghost(WIDTH/2, HEIGHTCANVAS/2); // position au centre
+	
+	
+	/**
+	 * Draw image bg, faire défiler en mode cyclique
+	 * @param positionXImageBg
+	 */
+	public void drawBg(double positionXImageBg) {
+		// bg: 2 images côte à côte
+		gc.clearRect(0, 0, WIDTH, HEIGHT);
+		gc.drawImage(img, positionXImageBg, 0);
+		gc.drawImage(img, positionXImageBg+WIDTH, 0);
+		
 	}
 	
+	/**
+	 * Initialiser le Text affichant le score, afficher en rouge si score = 0 
+	 * @param score
+	 */
+	public void initialiserScoreText(int score) {
+		scoreText.setText("Score: " + score);
+		scoreText.setFont(Font.font(null, FontWeight.BOLD, 15));
+		Color scoreColor;
+		if (score==0) {
+			scoreColor = Color.RED;
+		} else {
+			scoreColor = Color.BLACK;
+		}
+		scoreText.setFill(scoreColor);	
+	}
+	
+	/**
+	 * Ramener attention sur canvas, pour que la touche espace fonctionne 
+	 * sur le canvas (et n'actionne pas les boutons)
+	 */
 	public void requestFocus() {
 		/* Après l’exécution de la fonction, le
 		focus va automatiquement au canvas */
@@ -183,10 +178,8 @@ public class FlappyGhost extends Application {
 		});
 	}
 
-	public Ghost getGhost() {
-		return ghost;
-	}
-
+	// getters 
+	
 	public GraphicsContext getGc() {
 		return gc;
 	}
@@ -195,15 +188,9 @@ public class FlappyGhost extends Application {
 		return scoreText;
 	}
 
-	public void setScoreText(Text scoreText) {
-		this.scoreText = scoreText;
-	}
-
 	public CheckBox getCheckbox() {
 		return checkbox;
 	}
 	
-	
-
 
 }

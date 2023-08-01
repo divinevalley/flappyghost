@@ -23,7 +23,7 @@ public abstract class Entity {
 	/**
 	 * Met à jour la position et la vitesse de l'objet
 	 *
-	 * @param dt Temps écoulé depuis le dernier update() en secondes
+	 * @param dt (Temps écoulé depuis le dernier update() en secondes)
 	 */
 	public abstract void update(double dt);
 
@@ -66,7 +66,8 @@ public abstract class Entity {
 		return d2 < (this.r + other.r) * (this.r + other.r);
 	}
 
-
+	// getters/setters : 
+	
 	public double getX() {
 		return x;
 	}
