@@ -134,7 +134,7 @@ public class Controleur extends AnimationTimer {
 	}
 	
 	/** 
-	 * recommence le jeu en réinitialisant ghost et ses attributs
+	 * (re)commence le jeu en (ré)initialisant ghost et ses attributs
 	 */
 	public void instancierGhost() { 
 		ghost = new Ghost(FlappyGhost.WIDTH/2, FlappyGhost.HEIGHTCANVAS/2); 
